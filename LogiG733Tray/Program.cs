@@ -1,39 +1,57 @@
 ﻿using HidSharp;
 using LogiG733Tray.G733;
+using Serilog;
 
 namespace LogiG733Tray
 {
     internal static class Program
     {
+        private static readonly ILogger Logger = Log.ForContext(typeof(Program));
+        
         private static NotifyIcon _notifyIcon = new();
-        private static ContextMenuStrip _contextMenu = new();
         private static readonly System.Windows.Forms.Timer UpdateTimer = new() { Interval = 5000 };
         private const int LowBatteryThreshold = 15;
 
         [STAThread]
         static void Main()
         {
+            Log.Logger = new LoggerConfiguration()
+                .MinimumLevel.Verbose()
+                .WriteTo.Console(
+                    outputTemplate:
+                    "[{Timestamp:HH:mm:ss} {Level:u3}] [{SourceContext}] {Message:lj}{NewLine}{Exception}",
+                    theme: Serilog.Sinks.SystemConsole.Themes.AnsiConsoleTheme.Code)
+                .WriteTo.File(
+                    path: "logs/log-.txt",
+                    outputTemplate:
+                    "[{Timestamp:MM-dd-yyyy HH:mm:ss} {Level:u3}] [{SourceContext}] {Message:lj}{NewLine}{Exception}",
+                    rollingInterval: RollingInterval.Day,
+                    retainedFileCountLimit: 4,
+                    shared: true)
+                .CreateLogger();
+            
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-
-            _contextMenu = new ContextMenuStrip();
-            _contextMenu.Items.Add("Exit", null, (_, _) => Application.Exit());
+            Utilities.SingleInstanceCheck();
+            
+            var contextMenu = new ContextMenuStrip();
+            contextMenu.Items.Add("Exit", null, (_, _) => Application.Exit());
 
             _notifyIcon = new NotifyIcon
             {
                 Icon = SystemIcons.Application,
-                ContextMenuStrip = _contextMenu,
+                ContextMenuStrip = contextMenu,
                 Visible = true,
                 Text = "Logi Battery Monitor"
             };
             var deviceItem = new ToolStripMenuItem("Device: N/A");
-            _contextMenu.Items.Insert(0, deviceItem);
+            contextMenu.Items.Insert(0, deviceItem);
             
             var batteryItem = new ToolStripMenuItem("Battery: N/A");
-            _contextMenu.Items.Insert(1, batteryItem);
+            contextMenu.Items.Insert(1, batteryItem);
             
             var batteryItemMv = new ToolStripMenuItem("Battery Voltage: N/A");
-            _contextMenu.Items.Insert(2, batteryItemMv);
+            contextMenu.Items.Insert(2, batteryItemMv);
             
             var colorPickerItem = new ToolStripMenuItem("Open Color Picker", null, (_, _) =>
             {
@@ -53,7 +71,7 @@ namespace LogiG733Tray
                 }
             
             });
-            _contextMenu.Items.Insert(3, colorPickerItem);
+            contextMenu.Items.Insert(3, colorPickerItem);
             
             UpdateTimer.Tick += (_, _) => UpdateBatteryInfo(deviceItem, batteryItem, batteryItemMv);
             UpdateTimer.Start();

@@ -1,9 +1,12 @@
 ﻿using LogiG733Tray.G733;
+using Serilog;
 
 namespace LogiG733Tray
 {
     public class LightControlForm : Form
     {
+        private static readonly ILogger Logger = Log.ForContext(typeof(LightControlForm));
+        
         private readonly G733Device _g733;
         private ColorDialog? _colorDialog;
         private Button? _btnUpper;
@@ -24,7 +27,7 @@ namespace LogiG733Tray
         private void InitializeComponents()
         {
             Text = "G733 Control";
-            Size = new Size(350, 250);
+            Size = new Size(350, 235);
             FormBorderStyle = FormBorderStyle.FixedDialog;
             MaximizeBox = false;
 
@@ -35,7 +38,7 @@ namespace LogiG733Tray
             _btnBoth = new Button { Text = "Set Both Bars", Dock = DockStyle.Fill };
             _btnOff = new Button { Text = "Turn Off Lights", Dock = DockStyle.Fill };
             _btnBestColor = new Button { Text = "Best Color", Dock = DockStyle.Fill };
-            _btnGetPowerOff = new Button { Text = "Get Auto Poweroff time", Dock = DockStyle.Fill };
+            _btnGetPowerOff = new Button { Text = "Get Auto Power-Off time", Dock = DockStyle.Fill };
             _btnSetAutoPowerOff = new Button { Text = "Set Auto Power-Off", Dock = DockStyle.Fill };
 
             _txtAutoPowerOff = new TextBox { PlaceholderText = "Minutes (0 = Disabled)", Dock = DockStyle.Fill };
@@ -61,12 +64,8 @@ namespace LogiG733Tray
             table.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50));
             table.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50));
 
-            table.RowStyles.Add(new RowStyle(SizeType.AutoSize)); // Upper + Lower
-            table.RowStyles.Add(new RowStyle(SizeType.AutoSize)); // Set Both Bars
-            table.RowStyles.Add(new RowStyle(SizeType.AutoSize)); // Turn off Lights
-            table.RowStyles.Add(new RowStyle(SizeType.AutoSize)); // Best Color
-            table.RowStyles.Add(new RowStyle(SizeType.AutoSize)); // Get auto poweroff
-            table.RowStyles.Add(new RowStyle(SizeType.AutoSize)); // Minutes text + Set auto power off
+            for (int i = 0; i < table.RowCount; i++)
+                table.RowStyles.Add(new RowStyle(SizeType.AutoSize));
 
             table.Controls.Add(_btnUpper, 0, 0);
             table.Controls.Add(_btnLower, 1, 0);

@@ -5,7 +5,7 @@ namespace LogiG733Tray.G733
     public class G733Device
     {
         private const int VendorId = 0x046D; // Logi
-        private static readonly int[] SupportedProductIDs = [0x0afe];
+        private static readonly int[] SupportedProductIDs = [0x0afe, 0x0ab5, 0x0b1f, 0x0a5b];
         
         public string Name { get; }
         private readonly G733HidClient _hid;
