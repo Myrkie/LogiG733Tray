@@ -59,6 +59,16 @@ namespace LogiG733Tray.G733
         {
             _hid.SetLights(mainColor, logoColor);
         }
+        
+        public int GetAutoPowerOff()
+        {
+            return _hid.GetAutoPowerOff();
+        }
+
+        public void SetAutoPowerOff(int minutes)
+        {
+            _hid.SetAutoPowerOff(minutes);
+        }
 
         /// <summary>
         /// Turn off all lights.

@@ -68,10 +68,12 @@ namespace LogiG733Tray.G733
 
             return command;
         }
-
+        
         /// <summary>
         /// Sets the color or turns off the lights for a specific target.
         /// </summary>
+        /// <param name="target"></param>
+        /// <param name="color"></param>
         public void SetLight(LightTarget target, RgbColor? color = null)
         {
             using var stream = device.Open();
@@ -84,11 +86,74 @@ namespace LogiG733Tray.G733
             Thread.Sleep(10);
             stream.Write(command, 0, command.Length);
         }
+        /// <summary>
+        /// Gets auto power off timer
+        /// </summary>
+        /// <returns>time in minutes</returns>
+        public int GetAutoPowerOff()
+        {
+            using var stream = device.Open();
+
+            byte[] command = new byte[HidppLongMessageLength];
+            command[0] = 0x11; // HIDPP_LONG_MESSAGE
+            command[1] = 0xFF; // Device receiver (host)
+            command[2] = 0x08; // Battery / power function
+            command[3] = 0x12; // Subcommand: Get Auto Power-Off (common for G733)
+
+            // Fill remaining bytes with 0
+            for (int i = 4; i < HidppLongMessageLength; i++)
+                command[i] = 0x00;
+
+            stream.Write(command, 0, command.Length);
+
+            Thread.Sleep(10);
+
+            byte[] response = new byte[HidppLongMessageLength];
+            int read = stream.Read(response, 0, response.Length);
+
+            if (read < 7)
+                return -1; // invalid response
+
+            return response[4];
+        }
+        /// <summary>
+        /// Sets auto power off timer
+        /// </summary>
+        /// <param name="minutes"></param>
+        /// <returns></returns>
+
+        public int SetAutoPowerOff(int minutes)
+        {
+            byte value = (byte)minutes;
+            byte[] command = new byte[HidppLongMessageLength];
+            for (int i = 0; i < command.Length; i++)
+                command[i] = 0x00;
+
+            command[0] = 0x11;      // Report ID (HIDPP_LONG_MESSAGE)
+            command[1] = 0xFF;      // Receiver = host
+            command[2] = 0x08;      // Battery / Power function
+            command[3] = 0x2A;      // Subcommand: Set Auto Power-Off
+            command[4] = value;
+
+            using var stream = device.Open();
+            stream.Write(command, 0, command.Length);
+
+            Thread.Sleep(10);
+
+            byte[] response = new byte[HidppLongMessageLength];
+            int read = stream.Read(response, 0, response.Length);
+            if (read < 7)
+                return -1;
+
+            return response[4];
+        }
 
         /// <summary>
         /// Sets both upper and lower lights at once.
         /// Pass null to disable a bar.
         /// </summary>
+        /// <param name="upperColor"></param>
+        /// <param name="lowerColor"></param>
         public void SetLights(RgbColor? upperColor, RgbColor? lowerColor)
         {
             // Upper light
@@ -112,7 +177,7 @@ namespace LogiG733Tray.G733
             }
         }
 
-
+        
         /// <summary>
         /// Turns off all lights.
         /// </summary>
@@ -131,7 +196,7 @@ namespace LogiG733Tray.G733
 
             stream.Write(dataRequest, 0, dataRequest.Length);
 
-            Thread.Sleep(5);
+            Thread.Sleep(10);
 
             byte[] response = new byte[HidppLongMessageLength];
             int read = stream.Read(response, 0, response.Length);

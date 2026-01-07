@@ -35,8 +35,6 @@ namespace LogiG733Tray
             var batteryItemMv = new ToolStripMenuItem("Battery Voltage: N/A");
             _contextMenu.Items.Insert(2, batteryItemMv);
             
-            
-            
             var colorPickerItem = new ToolStripMenuItem("Open Color Picker", null, (_, _) =>
             {
                 
@@ -83,9 +81,11 @@ namespace LogiG733Tray
                 if (battery.Status == BatteryStatus.Unavailable)
                     continue;
 
-
                 deviceItem.Text = $"Device: {g733.Name}";
-                batteryItem.Text = $"Battery: {battery.Level}%";
+                
+                var statusText = battery.Status == BatteryStatus.Charging ? "Charging" : battery.Status.ToString();
+                batteryItem.Text = $"Battery: {battery.Level}% ({statusText})";
+                
                 batteryItemMv.Text = $"Battery Voltage: {battery.VoltageMv} mV";
 
                 _notifyIcon.Icon = CreateBatteryIcon(battery.Level, battery.Status);
