@@ -5,7 +5,8 @@ namespace LogiG733Tray
 {
     public class LightControlForm : Form
     {
-        private static readonly ILogger Logger = Log.ForContext(typeof(LightControlForm));
+        // ReSharper disable once UnusedMember.Local
+        private static readonly ILogger Logger = Log.ForContext<LightControlForm>();
         
         private readonly G733Device _g733;
         private ColorDialog? _colorDialog;
@@ -26,7 +27,7 @@ namespace LogiG733Tray
 
         private void InitializeComponents()
         {
-            Text = "G733 Control";
+            Text = "LogiTray Control";
             Size = new Size(350, 235);
             FormBorderStyle = FormBorderStyle.FixedDialog;
             MaximizeBox = false;

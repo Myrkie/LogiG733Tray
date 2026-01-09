@@ -6,11 +6,13 @@ namespace LogiG733Tray
 {
     internal static class Program
     {
+        // ReSharper disable once UnusedMember.Local
         private static readonly ILogger Logger = Log.ForContext(typeof(Program));
-        
         private static NotifyIcon _notifyIcon = new();
         private static readonly System.Windows.Forms.Timer UpdateTimer = new() { Interval = 5000 };
-        private const int LowBatteryThreshold = 15;
+        private static LightControlForm? _lightControlForm;
+        public static NotifyIcon NotifyIcon() { return _notifyIcon; }
+        
 
         [STAThread]
         static void Main()
@@ -42,8 +44,9 @@ namespace LogiG733Tray
                 Icon = SystemIcons.Application,
                 ContextMenuStrip = contextMenu,
                 Visible = true,
-                Text = "Logi Battery Monitor"
+                Text = "LogiTray Battery Monitor"
             };
+            
             var deviceItem = new ToolStripMenuItem("Device: N/A");
             contextMenu.Items.Insert(0, deviceItem);
             
@@ -53,9 +56,8 @@ namespace LogiG733Tray
             var batteryItemMv = new ToolStripMenuItem("Battery Voltage: N/A");
             contextMenu.Items.Insert(2, batteryItemMv);
             
-            var colorPickerItem = new ToolStripMenuItem("Open Color Picker", null, (_, _) =>
+            var colorPickerItem = new ToolStripMenuItem("Open Headset Config", null, (_, _) =>
             {
-                
                 foreach (var device in DeviceList.Local.GetHidDevices())
                 {
                     if (!G733Device.TryCreate(device, out var g733))
@@ -66,8 +68,7 @@ namespace LogiG733Tray
                     if (battery.Status == BatteryStatus.Unavailable)
                         continue;
 
-                    var form = new LightControlForm(g733);
-                    form.Show();
+                    ShowLightControlForm(g733);
                 }
             
             });
@@ -81,10 +82,7 @@ namespace LogiG733Tray
             Application.Run();
         }
 
-        private static void UpdateBatteryInfo(
-            ToolStripMenuItem deviceItem,
-            ToolStripMenuItem batteryItem,
-            ToolStripMenuItem batteryItemMv)
+        private static void UpdateBatteryInfo(ToolStripMenuItem deviceItem, ToolStripMenuItem batteryItem, ToolStripMenuItem batteryItemMv)
         {
             bool deviceFound = false;
 
@@ -106,7 +104,7 @@ namespace LogiG733Tray
                 
                 batteryItemMv.Text = $"Battery Voltage: {battery.VoltageMv} mV";
 
-                _notifyIcon.Icon = CreateBatteryIcon(battery.Level, battery.Status);
+                _notifyIcon.Icon = Utilities.CreateBatteryIcon(battery.Level, battery.Status);
                 break;
             }
 
@@ -125,11 +123,10 @@ namespace LogiG733Tray
             batteryItem.Text = "Battery: N/A";
             batteryItemMv.Text = "Battery Voltage: N/A";
 
-            var bmp = new Bitmap(16, 16);
+            using var bmp = new Bitmap(16, 16);
             using (var g = Graphics.FromImage(bmp))
             {
                 g.Clear(Color.Transparent);
-
                 g.FillEllipse(Brushes.Gray, 0, 0, 15, 15);
 
                 using var pen = new Pen(Color.White, 2);
@@ -137,61 +134,25 @@ namespace LogiG733Tray
                 g.DrawLine(pen, 12, 3, 3, 12);
             }
 
-            _notifyIcon.Icon = Icon.FromHandle(bmp.GetHicon());
+            Utilities.SetNotifyIcon(Utilities.CreateIconFromBitmap(bmp));
         }
 
-        
-
-
-
-        private static Icon CreateBatteryIcon(int level, BatteryStatus status)
+        private static void ShowLightControlForm(G733Device g733)
         {
-            var bmp = new Bitmap(16, 16);
-            using (var g = Graphics.FromImage(bmp))
+            if (_lightControlForm == null || _lightControlForm.IsDisposed)
             {
-                g.Clear(Color.Transparent);
-
-                bool isLow = level is >= 0 and <= LowBatteryThreshold;
-                bool isCharging = status == BatteryStatus.Charging;
-
-                Brush fillBrush =
-                    isCharging ? Brushes.LightBlue :
-                    isLow ? Brushes.Red :
-                    Brushes.LightGreen;
-
-                int fillHeight = Math.Max(1, 16 * level / 100);
-
-                g.FillRectangle(fillBrush, 0, 16 - fillHeight, 16, fillHeight);
-                g.DrawRectangle(Pens.Black, 0, 0, 15, 15);
-
-
-                if (isCharging)
-                {
-                    using var lightningPen = new Pen(Color.Yellow, 2);
-                    Point[] bolt =
-                    [
-                        new(6, 2),
-                        new(10, 2),
-                        new(8, 8),
-                        new(12, 8),
-                        new(6, 14),
-                        new(8, 10),
-                        new(4, 10)
-                    ];
-                    g.DrawLines(lightningPen, bolt);
-                }
-                else if (isLow)
-                {
-                    using var warnPen = new Pen(Color.White, 2);
-                    warnPen.StartCap = System.Drawing.Drawing2D.LineCap.Round;
-                    warnPen.EndCap = System.Drawing.Drawing2D.LineCap.Round;
-
-                    g.DrawLine(warnPen, 8, 3, 8, 9);
-
-                    g.DrawLine(warnPen, 8, 11, 8, 12);
-                }
+                _lightControlForm = new LightControlForm(g733);
+                _lightControlForm.Show();
             }
-            return Icon.FromHandle(bmp.GetHicon());
+            else if (!_lightControlForm.Visible)
+            {
+                _lightControlForm.Show();
+            }
+            else
+            {
+                _lightControlForm.BringToFront();
+                _lightControlForm.Activate();
+            }
         }
     }
 }
