@@ -1,9 +1,48 @@
 ﻿using HidSharp;
+using Serilog;
 
 namespace LogiG733Tray.G733
 {
     public sealed class G733HidClient(HidDevice device)
     {
+        private static readonly ILogger Logger = Log.ForContext<G733HidClient>();
+
+        public bool IsOnline { get; private set; } = true;
+
+        public event Action<bool>? OnlineStateChanged;
+
+        private void SetOffline()
+        {
+            if (!IsOnline)
+                return;
+
+            IsOnline = false;
+            Logger.Information("Headset went offline");
+            OnlineStateChanged?.Invoke(false);
+        }
+
+        private void SetOnline()
+        {
+            if (IsOnline)
+                return;
+
+            IsOnline = true;
+            Logger.Information("Headset is back online");
+            OnlineStateChanged?.Invoke(true);
+        }
+
+        private bool ValidateResponse(byte[] response, int read)
+        {
+            if (read < 7 || response[2] == 0xFF)
+            {
+                SetOffline();
+                return false;
+            }
+
+            SetOnline();
+            return true;
+        }
+        
         private const int HidppLongMessageLength = 20;
 
         public enum LightTarget : byte
@@ -85,6 +124,10 @@ namespace LogiG733Tray.G733
 
             Thread.Sleep(10);
             stream.Write(command, 0, command.Length);
+            byte[] response = new byte[HidppLongMessageLength];
+
+            if (response[2] == 0xFF)
+                SetOffline();
         }
         /// <summary>
         /// Gets auto power off timer
@@ -114,7 +157,9 @@ namespace LogiG733Tray.G733
             if (read < 7)
                 return -1; // invalid response
 
-            return response[4];
+            if (response[2] != 0xFF) return response[4];
+            SetOffline();
+            return -1;
         }
         /// <summary>
         /// Sets auto power off timer
@@ -145,7 +190,9 @@ namespace LogiG733Tray.G733
             if (read < 7)
                 return -1;
 
-            return response[4];
+            if (response[2] != 0xFF) return response[4];
+            SetOffline();
+            return -1;
         }
 
         /// <summary>
@@ -163,6 +210,10 @@ namespace LogiG733Tray.G733
                 RgbColor rgb = upperColor ?? Colors.Off;
                 byte[] command = BuildLightCommand(LightTarget.Upper, mode, rgb);
                 stream.Write(command, 0, command.Length);
+                byte[] response = new byte[HidppLongMessageLength];
+
+                if (response[2] == 0xFF)
+                    SetOffline();
             }
 
             Thread.Sleep(20);
@@ -174,9 +225,12 @@ namespace LogiG733Tray.G733
                 RgbColor rgb = lowerColor ?? Colors.Off;
                 byte[] command = BuildLightCommand(LightTarget.Lower, mode, rgb);
                 stream.Write(command, 0, command.Length);
+                byte[] response = new byte[HidppLongMessageLength];
+
+                if (response[2] == 0xFF)
+                    SetOffline();
             }
         }
-
         
         /// <summary>
         /// Turns off all lights.
@@ -201,7 +255,7 @@ namespace LogiG733Tray.G733
             byte[] response = new byte[HidppLongMessageLength];
             int read = stream.Read(response, 0, response.Length);
 
-            return read < 7 ? [] : response;
+            return !ValidateResponse(response, read) ? [] : response;
         }
     }
 }

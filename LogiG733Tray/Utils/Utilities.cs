@@ -2,7 +2,7 @@
 using LogiG733Tray.G733;
 using Serilog;
 
-namespace LogiG733Tray
+namespace LogiG733Tray.Utils
 {
     public static partial class Utilities
     {

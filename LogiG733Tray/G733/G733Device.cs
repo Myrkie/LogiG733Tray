@@ -1,18 +1,26 @@
 ﻿using HidSharp;
+using Serilog;
 
 namespace LogiG733Tray.G733
 {
     public class G733Device
     {
+        // ReSharper disable once UnusedMember.Local
+        private static readonly ILogger Logger = Log.ForContext<G733Device>();
+        
         private const int VendorId = 0x046D; // Logi
         private static readonly int[] SupportedProductIDs = [0x0afe, 0x0ab5, 0x0b1f, 0x0a5b];
-        
-        public string Name { get; }
+        private static G733Device? _cachedDevice;
         private readonly G733HidClient _hid;
-        
+
+        public string Name { get; }
+        public bool IsAvailable => _hid.IsOnline;
+
+        public event Action<bool>? AvailabilityChanged;
         private G733Device(HidDevice device)
         {
             _hid = new G733HidClient(device);
+            _hid.OnlineStateChanged += state => AvailabilityChanged?.Invoke(state);
             Name = device.GetProductName(GetStringFlags.None);
         }
 
@@ -22,7 +30,7 @@ namespace LogiG733Tray.G733
                    SupportedProductIDs.Contains(device.ProductID);
         }
 
-        public static bool TryCreate(HidDevice device, out G733Device? g733)
+        private static bool TryCreate(HidDevice device, out G733Device? g733)
         {
             if (!IsSupported(device))
             {
@@ -33,6 +41,31 @@ namespace LogiG733Tray.G733
             g733 = new G733Device(device);
             return true;
         }
+        
+        public static G733Device? GetDevice()
+        {
+            if (_cachedDevice != null)
+            {
+                var battery = _cachedDevice.GetBatteryInfo();
+                if (battery.Status is BatteryStatus.Unavailable or BatteryStatus.Timeout)
+                    return _cachedDevice;
+
+                _cachedDevice = null;
+            }
+
+            foreach (var device in DeviceList.Local.GetHidDevices())
+            {
+                if (!TryCreate(device, out var g733)) continue;
+                var battery = g733!.GetBatteryInfo();
+
+                if (battery.Status == BatteryStatus.Unavailable)
+                    continue;
+                _cachedDevice = g733;
+                return _cachedDevice;
+            }
+            return null;
+        }
+        
         /// <summary>
         /// Set the upper light bar color.
         /// Pass null to disable the bar.
