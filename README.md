@@ -13,7 +13,7 @@ For The Windows platform only
 ## Supported devices
 the HID++ Long Message format is reused across devices and just so happens to be reused on some headsets
 
-supported devices are defined by their ProductID within G733Device.SupportedProductIDs, not all devices that are supported are here I only tested with variants I had access too.
+supported devices are defined by their ProductID within [G733Device.SupportedProductIDs](https://github.com/Myrkie/LogiG733Tray/blob/mistress/LogiG733Tray/G733/G733Device.cs#L12), not all devices that are supported are here I only tested with variants I had access too.
 
 0x0afe // g733 Lilac
 
