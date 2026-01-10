@@ -11,7 +11,7 @@ namespace LogiG733Tray.Utils
         // ReSharper disable once NotAccessedField.Local
         private static Mutex _mutex = null!;
         private const int LowBatteryThreshold = 15;
-        
+        private const int CriticalBatteryThreshold = 5;
 
         [LibraryImport("user32.dll", SetLastError = true)]
         [return: MarshalAs(UnmanagedType.Bool)]
@@ -57,6 +57,7 @@ namespace LogiG733Tray.Utils
                 g.Clear(Color.Transparent);
 
                 bool isLow = level is >= 0 and <= LowBatteryThreshold;
+                bool isLowCritical = level is >= 0 and <= CriticalBatteryThreshold;
                 bool isCharging = status == BatteryStatus.Charging;
 
                 Brush fillBrush =
@@ -84,7 +85,7 @@ namespace LogiG733Tray.Utils
                     ];
                     g.DrawLines(lightningPen, bolt);
                 }
-                else if (isLow)
+                else if (isLowCritical)
                 {
                     using var warnPen = new Pen(Color.White, 2);
                     warnPen.StartCap = System.Drawing.Drawing2D.LineCap.Round;

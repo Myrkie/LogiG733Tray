@@ -24,19 +24,27 @@ namespace LogiG733Tray
         private Label? _lblBatteryVoltage;
         private Panel? _offlineOverlay;
 
-        private readonly G733BatteryMonitor _batteryMonitor;
+        private readonly G733BatteryMonitor? _batteryMonitor;
 
-        public LightControlForm(G733Device? g733, G733BatteryMonitor batteryMonitor)
+        public LightControlForm(G733Device? g733, G733BatteryMonitor? batteryMonitor)
         {
             if (g733 != null) _g733 = g733;
             _batteryMonitor = batteryMonitor;
             InitializeComponents();
             SetupOfflineOverlay();
             StartPosition = FormStartPosition.CenterScreen;
-            _batteryMonitor.BatteryUpdated += UpdateBatteryUi;
-            _batteryMonitor.RefreshNow();
-            _g733?.AvailabilityChanged += OnAvailabilityChanged;
-            ApplyAvailability(_g733!.IsAvailable);
+            _batteryMonitor?.BatteryUpdated += UpdateBatteryUi;
+            _batteryMonitor?.RefreshNow();
+            _g733?.ConnectionStateChanged += state =>
+            {
+                if (InvokeRequired)
+                {
+                    Invoke(() => UpdateConnectionStateUi(state));
+                    return;
+                }
+                UpdateConnectionStateUi(state);
+            };
+            if (_g733 != null) UpdateConnectionStateUi(_g733.ConnectionState);
         }
 
         private void InitializeComponents()
@@ -234,15 +242,21 @@ namespace LogiG733Tray
             _g733?.SetLights(rgb, rgb);
         }
         
-        private void OnAvailabilityChanged(bool available)
+        private void UpdateConnectionStateUi(DeviceConnectionState state)
         {
-            if (InvokeRequired)
+            switch (state)
             {
-                Invoke(() => OnAvailabilityChanged(available));
-                return;
+                case DeviceConnectionState.NoReceiver:
+                case DeviceConnectionState.HeadsetSleeping:
+                    _offlineOverlay!.Visible = true;
+                    break;
+                case DeviceConnectionState.ReceiverPresent:
+                case DeviceConnectionState.HeadsetOnline:
+                    _offlineOverlay!.Visible = false;
+                    break;
             }
-            ApplyAvailability(available);
         }
+
 
         
         private void SetupOfflineOverlay()
@@ -279,7 +293,7 @@ namespace LogiG733Tray
 
             var title = new Label
             {
-                Text = "Headset disconnected",
+                Text = "Receiver connected",
                 Font = new Font("Segoe UI", 12, FontStyle.Bold),
                 ForeColor = Color.White,
                 Dock = DockStyle.Top,
@@ -289,7 +303,7 @@ namespace LogiG733Tray
 
             var subtitle = new Label
             {
-                Text = "Headset is Offline.",
+                Text = "Headset is Asleep.",
                 Font = new Font("Segoe UI", 9),
                 ForeColor = Color.Gainsboro,
                 Dock = DockStyle.Fill,
@@ -304,10 +318,6 @@ namespace LogiG733Tray
             _offlineOverlay.Controls.Add(card);
             Controls.Add(_offlineOverlay);
             _offlineOverlay.BringToFront();
-        }
-        private void ApplyAvailability(bool available)
-        {
-            _offlineOverlay?.Visible = !available;
         }
     }
 }

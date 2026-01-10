@@ -7,7 +7,7 @@ namespace LogiG733Tray.G733
     {
         private static readonly ILogger Logger = Log.ForContext<G733HidClient>();
 
-        public bool IsOnline { get; private set; } = true;
+        private bool IsOnline { get; set; } = true;
 
         public event Action<bool>? OnlineStateChanged;
 
@@ -139,9 +139,9 @@ namespace LogiG733Tray.G733
 
             byte[] command = new byte[HidppLongMessageLength];
             command[0] = 0x11; // HIDPP_LONG_MESSAGE
-            command[1] = 0xFF; // Device receiver (host)
+            command[1] = 0xFF; // Device Receiver (host)
             command[2] = 0x08; // Battery / power function
-            command[3] = 0x12; // Subcommand: Get Auto Power-Off (common for G733)
+            command[3] = 0x12; // Subcommand: Get Auto Power-Off
 
             // Fill remaining bytes with 0
             for (int i = 4; i < HidppLongMessageLength; i++)
@@ -245,8 +245,8 @@ namespace LogiG733Tray.G733
 
             byte[] dataRequest = new byte[HidppLongMessageLength];
             dataRequest[0] = 0x11; // HIDPP_LONG_MESSAGE
-            dataRequest[1] = 0xFF; // Device receiver
-            dataRequest[2] = 0x08; // Battery function
+            dataRequest[1] = 0xFF; // Device Receiver
+            dataRequest[2] = 0x08; // Battery / power function
 
             stream.Write(dataRequest, 0, dataRequest.Length);
 

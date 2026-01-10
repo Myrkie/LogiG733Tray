@@ -12,18 +12,31 @@ namespace LogiG733Tray.G733
         private static readonly int[] SupportedProductIDs = [0x0afe, 0x0ab5, 0x0b1f, 0x0a5b];
         private static G733Device? _cachedDevice;
         private readonly G733HidClient _hid;
+        public DeviceConnectionState ConnectionState { get; private set; } = DeviceConnectionState.NoReceiver;
+        public event Action<DeviceConnectionState>? ConnectionStateChanged;
 
         public string Name { get; }
-        public bool IsAvailable => _hid.IsOnline;
 
-        public event Action<bool>? AvailabilityChanged;
-        private G733Device(HidDevice device)
+        private G733Device(HidDevice? device)
         {
-            _hid = new G733HidClient(device);
-            _hid.OnlineStateChanged += state => AvailabilityChanged?.Invoke(state);
-            Name = device.GetProductName(GetStringFlags.None);
+            _hid = new G733HidClient(device!);
+            _hid.OnlineStateChanged += _ => UpdateConnectionState();
+            Name = device!.GetProductName(GetStringFlags.None);
         }
-
+        
+        private void SetConnectionState(DeviceConnectionState newState)
+        {
+            if (ConnectionState == newState) return;
+            ConnectionState = newState;
+            ConnectionStateChanged?.Invoke(newState);
+        }
+        
+        private static bool IsReceiverPresent()
+        {
+            return DeviceList.Local.GetHidDevices()
+                .Any(IsSupported);
+        }
+        
         private static bool IsSupported(HidDevice device)
         {
             return device.VendorID == VendorId &&
@@ -47,7 +60,8 @@ namespace LogiG733Tray.G733
             if (_cachedDevice != null)
             {
                 var battery = _cachedDevice.GetBatteryInfo();
-                if (battery.Status is BatteryStatus.Unavailable or BatteryStatus.Timeout)
+
+                if (battery.Status is not BatteryStatus.Unavailable and not BatteryStatus.Timeout)
                     return _cachedDevice;
 
                 _cachedDevice = null;
@@ -56,15 +70,71 @@ namespace LogiG733Tray.G733
             foreach (var device in DeviceList.Local.GetHidDevices())
             {
                 if (!TryCreate(device, out var g733)) continue;
+
                 var battery = g733!.GetBatteryInfo();
 
-                if (battery.Status == BatteryStatus.Unavailable)
+                if (battery.Status == BatteryStatus.Unavailable) 
                     continue;
+
                 _cachedDevice = g733;
                 return _cachedDevice;
             }
+
             return null;
         }
+
+        public static bool TryConnectReceiver(out G733Device? device)
+        {
+            device = null;
+
+            foreach (var hid in DeviceList.Local.GetHidDevices())
+            {
+                if (!IsSupported(hid))
+                    continue;
+
+                if (!TryCreate(hid, out var g733))
+                    continue;
+
+                var battery = g733!.GetBatteryInfo();
+                if (battery.Status == BatteryStatus.Unavailable)
+                    continue;
+
+                _cachedDevice = g733;
+                g733.UpdateConnectionState();
+
+                device = g733;
+                return true;
+            }
+
+            return false;
+        }
+
+        
+        public void UpdateConnectionState()
+        {
+            if (!IsReceiverPresent())
+            {
+                SetConnectionState(DeviceConnectionState.NoReceiver);
+                return;
+            }
+
+            var battery = GetBatteryInfo();
+
+            switch (battery.Status)
+            {
+                case BatteryStatus.Unavailable:
+                    SetConnectionState(DeviceConnectionState.ReceiverPresent);
+                    return;
+                case BatteryStatus.Timeout:
+                    SetConnectionState(DeviceConnectionState.HeadsetSleeping);
+                    return;
+                default:
+                    SetConnectionState(DeviceConnectionState.HeadsetOnline);
+                    break;
+            }
+        }
+
+
         
         /// <summary>
         /// Set the upper light bar color.
@@ -137,11 +207,18 @@ namespace LogiG733Tray.G733
             }
         }
 
+        /// <summary>
+        /// Map voltage in mV to percentage
+        /// </summary>
+        /// <param name="voltage"></param>
+        /// <returns></returns>
         private static int MapVoltageToPercent(ushort voltage)
         {
             // my device arrived with a degraded battery so im using degraded values.
-            const int max = 3900;
-            const int min = 3300;
+            // I don't want to have to make a battery map I am not at all experience with battery technology.
+            // I also don't want to have to continue to have the awful Ghub software remaining on my machine to continue reverse engineering.
+            const int max = 4200;
+            const int min = 3500;
 
             switch (voltage)
             {
@@ -153,7 +230,7 @@ namespace LogiG733Tray.G733
 
             double percent = (double)(voltage - min) / (max - min);
             percent = Math.Pow(percent, 1.7);
-            return (int)Math.Round(percent * 100);
+            return (int)(percent * 100);
         }
     }
     public enum BatteryStatus
@@ -162,6 +239,13 @@ namespace LogiG733Tray.G733
         Detected,
         Charging,
         Timeout
+    }
+    public enum DeviceConnectionState
+    {
+        NoReceiver,
+        ReceiverPresent,
+        HeadsetSleeping,
+        HeadsetOnline
     }
 
     public class BatteryInfo

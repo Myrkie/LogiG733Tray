@@ -7,10 +7,13 @@ namespace LogiG733Tray
     {
         // ReSharper disable once UnusedMember.Local
         private static readonly ILogger Logger = Log.ForContext(typeof(Program));
+
         private static NotifyIcon _notifyIcon = new();
         private static LightControlForm? _lightControlForm;
-        public static NotifyIcon NotifyIcon() { return _notifyIcon; }
-        
+        private static G733Device? _g733;
+        private static G733BatteryMonitor? _batteryMonitor;
+
+        public static NotifyIcon NotifyIcon() => _notifyIcon;
 
         [STAThread]
         private static void Main()
@@ -29,12 +32,35 @@ namespace LogiG733Tray
                     retainedFileCountLimit: 4,
                     shared: true)
                 .CreateLogger();
-            
+
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
             Utils.Utilities.SingleInstanceCheck();
-            
+
             var contextMenu = new ContextMenuStrip();
+
+            var deviceItem = new ToolStripMenuItem("Device: N/A");
+            var batteryItem = new ToolStripMenuItem("Battery: N/A");
+            var batteryItemMv = new ToolStripMenuItem("Battery Voltage: N/A");
+
+            contextMenu.Items.Add(deviceItem);
+            contextMenu.Items.Add(batteryItem);
+            contextMenu.Items.Add(batteryItemMv);
+            contextMenu.Items.Add(new ToolStripSeparator());
+
+            var colorPickerItem = new ToolStripMenuItem(
+                "Open Headset Config",
+                null,
+                (_, _) => ShowLightControlForm());
+
+            var connectReceiverItem = new ToolStripMenuItem(
+                "Connect to receiver",
+                null,
+                (_, _) => { AttachDevice(G733Device.TryConnectReceiver(out var device) ? device : null); });
+
+            contextMenu.Items.Add(colorPickerItem);
+            contextMenu.Items.Add(connectReceiverItem);
+            contextMenu.Items.Add(new ToolStripSeparator());
             contextMenu.Items.Add("Exit", null, (_, _) => Application.Exit());
 
             _notifyIcon = new NotifyIcon
@@ -44,82 +70,109 @@ namespace LogiG733Tray
                 Visible = true,
                 Text = "LogiTray Battery Monitor"
             };
-            
-            var deviceItem = new ToolStripMenuItem("Device: N/A");
-            contextMenu.Items.Insert(0, deviceItem);
-            
-            var batteryItem = new ToolStripMenuItem("Battery: N/A");
-            contextMenu.Items.Insert(1, batteryItem);
-            
-            var batteryItemMv = new ToolStripMenuItem("Battery Voltage: N/A");
-            contextMenu.Items.Insert(2, batteryItemMv);
-            
-            var g733 = G733Device.GetDevice();
-            if (g733 == null)
-            {
-                ShowNoDeviceState(deviceItem, batteryItem, batteryItemMv);
-            }
-            
-            var batteryMonitor = new G733BatteryMonitor(g733);
-            
-            batteryMonitor.BatteryUpdated += battery =>
-            {
-                if (battery is { Status: BatteryStatus.Timeout } or { Status: BatteryStatus.Unavailable })
-                {
-                    deviceItem.Text = $"Device: {g733?.Name}";
-                    ShowSleepingState(batteryItem, batteryItemMv);
-                    return;
-                }
-                
-                deviceItem.Text = $"Device: {g733?.Name}";
-                batteryItem.Text = $"Battery: {battery!.Level}% ({(battery.Status == BatteryStatus.Charging ? "Charging" : battery.Status.ToString())})";
-                batteryItemMv.Text = $"Battery Voltage: {battery.VoltageMv} mV";
-                _notifyIcon.Icon = Utils.Utilities.CreateBatteryIcon(battery.Level, battery.Status);
-            };
-            
-            g733?.AvailabilityChanged += available =>
-            {
-                if (available) return;
-                Logger.Information("headset is offline showing sleep state");
-                ShowSleepingState(batteryItem, batteryItemMv);
-            };
-            
-            var colorPickerItem = new ToolStripMenuItem("Open Headset Config", null, (_, _) =>
-            {
-                ShowLightControlForm(g733, batteryMonitor);
-            });
-            contextMenu.Items.Insert(3, colorPickerItem);
-            
-            batteryMonitor.RefreshNow();
+
+            AttachDevice(G733Device.GetDevice());
 
             Application.Run();
+            return;
+
+            void AttachDevice(G733Device? newDevice)
+            {
+                if (_batteryMonitor != null)
+                {
+                    _batteryMonitor.BatteryUpdated -= UpdateUi;
+                    _batteryMonitor.Dispose();
+                    _batteryMonitor = null;
+                }
+
+                if (_g733 != null)
+                {
+                    _g733.ConnectionStateChanged -= OnConnectionStateChanged;
+                }
+
+                _g733 = newDevice;
+
+                if (_g733 == null)
+                {
+                    ShowNoDeviceState(deviceItem, batteryItem, batteryItemMv);
+                    return;
+                }
+
+                _batteryMonitor = new G733BatteryMonitor(_g733);
+                _batteryMonitor.BatteryUpdated += UpdateUi;
+
+                _g733.ConnectionStateChanged += OnConnectionStateChanged;
+
+                _g733.UpdateConnectionState();
+                _batteryMonitor.RefreshNow();
+            }
+
+            void OnConnectionStateChanged(DeviceConnectionState _)
+            {
+                UpdateUi(_g733?.GetBatteryInfo());
+            }
+
+            void UpdateUi(BatteryInfo? battery)
+            {
+                switch (_g733?.ConnectionState)
+                {
+                    case DeviceConnectionState.NoReceiver:
+                        ShowNoDeviceState(deviceItem, batteryItem, batteryItemMv);
+                        break;
+
+                    case DeviceConnectionState.HeadsetSleeping:
+                        deviceItem.Text = $"Device: {_g733.Name}";
+                        ShowSleepingState(batteryItem, batteryItemMv);
+                        break;
+
+                    case DeviceConnectionState.ReceiverPresent:
+                        deviceItem.Text = $"Device: {_g733.Name}";
+                        batteryItem.Text = "Battery: N/A";
+                        batteryItemMv.Text = "Battery Voltage: N/A";
+                        break;
+
+                    case DeviceConnectionState.HeadsetOnline:
+                        if (battery != null)
+                        {
+                            deviceItem.Text = $"Device: {_g733.Name}";
+                            batteryItem.Text =
+                                $"Battery: {battery.Level}% ({(battery.Status == BatteryStatus.Charging ? "Charging" : battery.Status.ToString())})";
+                            batteryItemMv.Text =
+                                $"Battery Voltage: {battery.VoltageMv} mV";
+
+                            _notifyIcon.Icon = Utils.Utilities.CreateBatteryIcon(
+                                    battery.Level,
+                                    battery.Status);
+                        }
+                        break;
+                }
+            }
         }
-        
-        
-        private static void ShowSleepingState(ToolStripMenuItem batteryItem, ToolStripMenuItem batteryItemMv)
+
+        private static void ShowSleepingState(
+            ToolStripMenuItem batteryItem,
+            ToolStripMenuItem batteryItemMv)
         {
             batteryItem.Text = "Battery: Device Asleep";
             batteryItemMv.Text = "Battery Voltage: Device Asleep";
 
             using var bmp = new Bitmap(16, 16);
-            using (var g = Graphics.FromImage(bmp))
-            {
-                g.Clear(Color.Transparent);
+            using var g = Graphics.FromImage(bmp);
 
-                g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+            g.Clear(Color.Transparent);
+            g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
 
-                using var moonBrush = new SolidBrush(Color.Yellow);
-                g.FillEllipse(moonBrush, 2, 2, 12, 12);
-                using var eraseBrush = new SolidBrush(Color.Transparent);
-                g.CompositingMode = System.Drawing.Drawing2D.CompositingMode.SourceCopy;
-                g.FillEllipse(eraseBrush, 6, 2, 8, 12); // "cut out" crescent
-            }
+            using var moonBrush = new SolidBrush(Color.Yellow);
+            g.FillEllipse(moonBrush, 2, 2, 12, 12);
 
-            Utils.Utilities.SetNotifyIcon(Utils.Utilities.CreateIconFromBitmap(bmp));
+            using var eraseBrush = new SolidBrush(Color.Transparent);
+            g.CompositingMode = System.Drawing.Drawing2D.CompositingMode.SourceCopy;
+            g.FillEllipse(eraseBrush, 6, 2, 8, 12);
+
+            Utils.Utilities.SetNotifyIcon(
+                Utils.Utilities.CreateIconFromBitmap(bmp));
         }
 
-
-        
         private static void ShowNoDeviceState(
             ToolStripMenuItem deviceItem,
             ToolStripMenuItem batteryItem,
@@ -130,24 +183,24 @@ namespace LogiG733Tray
             batteryItemMv.Text = "Battery Voltage: N/A";
 
             using var bmp = new Bitmap(16, 16);
-            using (var g = Graphics.FromImage(bmp))
-            {
-                g.Clear(Color.Transparent);
-                g.FillEllipse(Brushes.Gray, 0, 0, 15, 15);
+            using var g = Graphics.FromImage(bmp);
 
-                using var pen = new Pen(Color.White, 2);
-                g.DrawLine(pen, 3, 3, 12, 12);
-                g.DrawLine(pen, 12, 3, 3, 12);
-            }
+            g.Clear(Color.Transparent);
+            g.FillEllipse(Brushes.Gray, 0, 0, 15, 15);
 
-            Utils.Utilities.SetNotifyIcon(Utils.Utilities.CreateIconFromBitmap(bmp));
+            using var pen = new Pen(Color.White, 2);
+            g.DrawLine(pen, 3, 3, 12, 12);
+            g.DrawLine(pen, 12, 3, 3, 12);
+
+            Utils.Utilities.SetNotifyIcon(
+                Utils.Utilities.CreateIconFromBitmap(bmp));
         }
 
-        private static void ShowLightControlForm(G733Device? g733, G733BatteryMonitor batteryMonitor)
+        private static void ShowLightControlForm()
         {
             if (_lightControlForm == null || _lightControlForm.IsDisposed)
             {
-                _lightControlForm = new LightControlForm(g733, batteryMonitor);
+                _lightControlForm = new LightControlForm(_g733, _batteryMonitor);
                 _lightControlForm.Show();
             }
             else if (!_lightControlForm.Visible)
