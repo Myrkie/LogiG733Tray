@@ -40,7 +40,7 @@ namespace LogiG733Tray.G733
         private static bool IsSupported(HidDevice device)
         {
             return device.VendorID == VendorId &&
-                   SupportedProductIDs.Contains(device.ProductID);
+                   Enumerable.Contains(SupportedProductIDs, device.ProductID);
         }
 
         private static bool TryCreate(HidDevice device, out G733Device? g733)
@@ -217,7 +217,7 @@ namespace LogiG733Tray.G733
             // my device arrived with a degraded battery so im using degraded values.
             // I don't want to have to make a battery map I am not at all experience with battery technology.
             // I also don't want to have to continue to have the awful Ghub software remaining on my machine to continue reverse engineering.
-            const int max = 4200;
+            const int max = 3990;
             const int min = 3500;
 
             switch (voltage)
