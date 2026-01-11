@@ -180,7 +180,7 @@
                 <EditText
                         android:id="@+id/etApiKey"
                         android:hint="Enter API Key"
-                        android:inputType="textPassword"
+                        android:inputType="text"
                         android:backgroundTint="#444444"
                         android:textColor="#FFFFFF"
                         android:textColorHint="#AAAAAA"
