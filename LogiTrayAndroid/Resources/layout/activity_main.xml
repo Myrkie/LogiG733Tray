@@ -1,0 +1,268 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+             android:layout_width="match_parent"
+             android:layout_height="match_parent">
+
+    <ScrollView
+            android:id="@+id/mainLayoutScroll"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="#1E1E1E">
+
+        <LinearLayout
+                android:id="@+id/mainLayout"
+                android:orientation="vertical"
+                android:padding="16dp"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+            <TextView
+                    android:id="@+id/tvDevice"
+                    android:text="Device: Not Detected"
+                    android:textSize="22sp"
+                    android:textColor="#00FFFF"
+                    android:gravity="center"
+                    android:textStyle="bold"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="12dp"/>
+
+            <TextView
+                    android:id="@+id/tvNextRefresh"
+                    android:text="Next refresh in: s"
+                    android:textColor="#FFFFFF"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center"
+                    android:layout_marginBottom="8dp"/>
+
+
+            <LinearLayout
+                    android:orientation="horizontal"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="6dp">
+
+                <Button
+                        android:id="@+id/btnUpperLight"
+                        android:text="Set Upper LightBar"
+                        android:layout_weight="1"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:backgroundTint="#333333"
+                        android:textColor="#FFFFFF"
+                        android:layout_marginEnd="3dp"/>
+
+                <Button
+                        android:id="@+id/btnLowerLight"
+                        android:text="Set Lower LightBar"
+                        android:layout_weight="1"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:backgroundTint="#333333"
+                        android:textColor="#FFFFFF"
+                        android:layout_marginStart="3dp"/>
+            </LinearLayout>
+
+            <Button
+                    android:id="@+id/btnBothLights"
+                    android:text="Set Both LightBars"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="6dp"
+                    android:backgroundTint="#333333"
+                    android:textColor="#FFFFFF"/>
+            <Button
+                    android:id="@+id/btnLightsOff"
+                    android:text="Turn Off LightBars"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="6dp"
+                    android:backgroundTint="#333333"
+                    android:textColor="#FFFFFF"/>
+            <Button
+                    android:id="@+id/btnBestColor"
+                    android:text="Best Color"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="12dp"
+                    android:backgroundTint="#333333"
+                    android:textColor="#FFFFFF"/>
+
+            <Button
+                    android:id="@+id/btnGetAutoPowerOff"
+                    android:text="Get Auto Power-Off"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="12dp"
+                    android:backgroundTint="#333333"
+                    android:textColor="#FFFFFF"/>
+            <LinearLayout
+                    android:orientation="horizontal"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="12dp">
+
+                <EditText
+                        android:id="@+id/etAutoPowerOff"
+                        android:hint="Minutes (0 = Disabled)"
+                        android:inputType="number"
+                        android:layout_weight="1"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:backgroundTint="#444444"
+                        android:textColor="#FFFFFF"
+                        android:textColorHint="#AAAAAA"
+                        android:layout_marginEnd="3dp"/>
+                <Button
+                        android:id="@+id/btnSetAutoPowerOff"
+                        android:text="Set Auto Power-Off"
+                        android:layout_weight="1"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:backgroundTint="#333333"
+                        android:textColor="#FFFFFF"
+                        android:layout_marginStart="3dp"/>
+            </LinearLayout>
+
+            <TextView
+                    android:text="Battery Status"
+                    android:textSize="18sp"
+                    android:textColor="#00FFFF"
+                    android:gravity="center"
+                    android:textStyle="bold"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="8dp"/>
+            <ProgressBar
+                    android:id="@+id/pbBattery"
+                    style="@android:style/Widget.ProgressBar.Horizontal"
+                    android:layout_width="match_parent"
+                    android:layout_height="16dp"
+                    android:max="100"
+                    android:progress="0"
+                    android:progressTint="#00FF00"
+                    android:layout_marginBottom="4dp"/>
+            <LinearLayout
+                    android:orientation="horizontal"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
+
+                <TextView
+                        android:id="@+id/tvBatteryPercent"
+                        android:text="Battery: 0%"
+                        android:textColor="#FFFFFF"
+                        android:layout_width="0dp"
+                        android:layout_weight="1"
+                        android:layout_height="wrap_content"/>
+                <TextView
+                        android:id="@+id/tvBatteryVoltage"
+                        android:text="Voltage: 0mV"
+                        android:textColor="#FFFFFF"
+                        android:layout_width="0dp"
+                        android:layout_weight="1"
+                        android:layout_height="wrap_content"
+                        android:gravity="end"/>
+            </LinearLayout>
+
+            <LinearLayout
+                    android:orientation="vertical"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:paddingTop="12dp">
+
+                <TextView
+                        android:text="API KEY"
+                        android:textColor="#AAAAAA"
+                        android:textStyle="bold"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"/>
+                <EditText
+                        android:id="@+id/etApiKey"
+                        android:hint="Enter API Key"
+                        android:inputType="textPassword"
+                        android:backgroundTint="#444444"
+                        android:textColor="#FFFFFF"
+                        android:textColorHint="#AAAAAA"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="6dp"/>
+
+                <TextView
+                        android:text="Machine IP"
+                        android:textColor="#AAAAAA"
+                        android:textStyle="bold"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"/>
+                <EditText
+                        android:id="@+id/etIpAddress"
+                        android:hint="Machine IP"
+                        android:inputType="text"
+                        android:backgroundTint="#444444"
+                        android:textColor="#FFFFFF"
+                        android:textColorHint="#AAAAAA"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="12dp"/>
+
+                <Button
+                        android:id="@+id/btnSetConnection"
+                        android:text="API Key - IP Apply | CONNECT"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:backgroundTint="#333333"
+                        android:textColor="#FFFFFF"/>
+            </LinearLayout>
+
+        </LinearLayout>
+    </ScrollView>
+
+    <LinearLayout
+            android:id="@+id/overlayAsleep"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:background="#B2000000"
+            android:visibility="gone"
+            android:clickable="true"
+            android:focusable="true"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+        <LinearLayout
+                android:orientation="vertical"
+                android:background="#FF202020"
+                android:padding="24dp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content">
+
+            <TextView
+                    android:text="⚠"
+                    android:textSize="32sp"
+                    android:gravity="center"
+                    android:textColor="#FFA500"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"/>
+
+            <TextView
+                    android:text="Receiver connected"
+                    android:textSize="18sp"
+                    android:textStyle="bold"
+                    android:gravity="center"
+                    android:textColor="#FFFFFF"
+                    android:layout_marginTop="8dp"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"/>
+
+            <TextView
+                    android:text="Headset is Asleep"
+                    android:textSize="14sp"
+                    android:gravity="center"
+                    android:textColor="#CCCCCC"
+                    android:layout_marginTop="4dp"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"/>
+        </LinearLayout>
+
+    </LinearLayout>
+
+</FrameLayout>

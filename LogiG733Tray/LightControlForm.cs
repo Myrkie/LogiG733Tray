@@ -1,4 +1,5 @@
-﻿using LogiG733Tray.G733;
+﻿using LogiG733Tray.API;
+using LogiG733Tray.G733;
 using Serilog;
 
 namespace LogiG733Tray
@@ -23,13 +24,17 @@ namespace LogiG733Tray
         private Label? _lblBatteryPercent;
         private Label? _lblBatteryVoltage;
         private Panel? _offlineOverlay;
-
+        private Label? _lblApiKey;
+        private Label? _lblLocalIp;
+        
         private readonly G733BatteryMonitor? _batteryMonitor;
+        private readonly bool _apiEnabled;
 
-        public LightControlForm(G733Device? g733, G733BatteryMonitor? batteryMonitor)
+        public LightControlForm(G733Device? g733, G733BatteryMonitor? batteryMonitor, bool apiEnabled)
         {
             if (g733 != null) _g733 = g733;
             _batteryMonitor = batteryMonitor;
+            _apiEnabled = apiEnabled;
             InitializeComponents();
             SetupOfflineOverlay();
             StartPosition = FormStartPosition.CenterScreen;
@@ -50,7 +55,7 @@ namespace LogiG733Tray
         private void InitializeComponents()
         {
             Text = "LogiTray Control";
-            Size = new Size(380, 380);
+            Size = _apiEnabled ? new Size(380, 440) : new Size(380, 365);
             FormBorderStyle = FormBorderStyle.FixedDialog;
             MaximizeBox = false;
             BackColor = Utils.UiUtilities.Bg;
@@ -149,28 +154,144 @@ namespace LogiG733Tray
 
             table.Controls.Add(txtAutoPowerOffStyled, 0, 6);
             table.Controls.Add(_btnSetAutoPowerOff, 1, 6);
-            
-            var batteryHeader = new Label
+
+            var batteryPanel = new TableLayoutPanel
             {
-                Text = "Battery Status",
-                Font = new Font("Segoe UI", 10, FontStyle.Bold),
-                ForeColor = Utils.UiUtilities.Accent,
-                Dock = DockStyle.Fill,
-                TextAlign = ContentAlignment.MiddleCenter
+                ColumnCount = 2,
+                RowCount = 2,
+                Dock = DockStyle.Top,
+                AutoSize = true
             };
+            batteryPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50));
+            batteryPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50));
 
-            table.Controls.Add(batteryHeader, 0, 7);
-            table.SetColumnSpan(batteryHeader, 2);
+            batteryPanel.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+            batteryPanel.Controls.Add(_batteryBar!, 0, 0);
+            batteryPanel.SetColumnSpan(_batteryBar!, 2);
 
-            table.Controls.Add(_batteryBar, 0, 8);
-            table.SetColumnSpan(_batteryBar, 2);
+            batteryPanel.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+            batteryPanel.Controls.Add(_lblBatteryPercent!, 0, 1);
+            batteryPanel.Controls.Add(_lblBatteryVoltage!, 1, 1);
 
-            table.Controls.Add(_lblBatteryPercent, 0, 9);
-            table.Controls.Add(_lblBatteryVoltage, 1, 9);
+            table.Controls.Add(batteryPanel, 0, 8);
+            table.SetColumnSpan(batteryPanel, 2);
+
 
             card.Controls.Add(table);
+            
             Controls.Add(card);
+
+            var footer = new Panel
+            {
+                Dock = DockStyle.Bottom,
+                AutoSize = true,
+                Padding = new Padding(10, 6, 10, 6),
+                BackColor = Utils.UiUtilities.Card
+            };
+
+            var footerLayout = new TableLayoutPanel
+            {
+                Dock = DockStyle.Fill,
+                ColumnCount = 3,
+                AutoSize = true
+            };
+
+            footerLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50));
+            footerLayout.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
+            footerLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50));
+
+            var apiHeader = new Label
+            {
+                Text = "API KEY",
+                ForeColor = Utils.UiUtilities.Muted,
+                Font = new Font("Segoe UI", 8, FontStyle.Bold),
+                Dock = DockStyle.Fill
+            };
+
+            var hintLabel = new Label
+            {
+                Text = "<- CLICK TO COPY ->",
+                ForeColor = Utils.UiUtilities.Muted,
+                Font = new Font("Segoe UI", 7),
+                AutoSize = true,
+                Anchor = AnchorStyles.None
+            };
+
+            var ipHeader = new Label
+            {
+                Text = "LOCAL IP",
+                ForeColor = Utils.UiUtilities.Muted,
+                Font = new Font("Segoe UI", 8, FontStyle.Bold),
+                Dock = DockStyle.Fill,
+                TextAlign = ContentAlignment.MiddleRight
+            };
+
+            _lblApiKey = new Label
+            {
+                Text = ApiKeyGenerator.GetApiKey(),
+                ForeColor = Utils.UiUtilities.Text,
+                Font = new Font("Consolas", 8),
+                AutoSize = true,
+                MaximumSize = new Size(240, 0),
+                Cursor = Cursors.Hand,
+                Dock = DockStyle.Fill
+            };
+
+            _lblLocalIp = new Label
+            {
+                Text = Utils.Utilities.GetLocalIp(),
+                ForeColor = Utils.UiUtilities.Text,
+                Font = new Font("Consolas", 8),
+                AutoSize = true,
+                Cursor = Cursors.Hand,
+                Dock = DockStyle.Fill,
+                TextAlign = ContentAlignment.TopRight
+            };
+
+            footerLayout.Controls.Add(apiHeader, 0, 0);
+            footerLayout.Controls.Add(hintLabel, 1, 0);
+            footerLayout.Controls.Add(ipHeader, 2, 0);
+
+            footerLayout.Controls.Add(_lblApiKey, 0, 1);
+            footerLayout.Controls.Add(new Label(), 1, 1);
+            footerLayout.Controls.Add(_lblLocalIp, 2, 1);
+
+            footer.Controls.Add(footerLayout);
+            if (_apiEnabled)
+            {
+
+                Controls.Add(footer);
+                footer.BringToFront();
+            }
+
+            _lblApiKey.Click += (_, _) =>
+            {
+                Clipboard.SetText(_lblApiKey.Text);
+                ShowCopiedHint(_lblApiKey);
+            };
+
+            _lblLocalIp.Click += (_, _) =>
+            {
+                Clipboard.SetText(_lblLocalIp.Text);
+                ShowCopiedHint(_lblLocalIp);
+            };
         }
+
+        private void ShowCopiedHint(Control target)
+        {
+            var originalColor = target.ForeColor;
+            target.ForeColor = Color.LimeGreen;
+
+            var timer = new System.Windows.Forms.Timer { Interval = 800 };
+            timer.Tick += (_, _) =>
+            {
+                target.ForeColor = originalColor;
+                timer.Stop();
+                timer.Dispose();
+            };
+            timer.Start();
+        }
+
 
 
         private void UpdateBatteryUi(BatteryInfo? battery)

@@ -133,8 +133,6 @@ namespace LogiG733Tray.G733
                     break;
             }
         }
-
-
         
         /// <summary>
         /// Set the upper light bar color.
@@ -158,15 +156,24 @@ namespace LogiG733Tray.G733
         /// Set upper and lower light bars at once.
         /// Pass null to disable a bar.
         /// </summary>
-        public void SetLights(G733HidClient.RgbColor? mainColor, G733HidClient.RgbColor? logoColor)
+        public void SetLights(G733HidClient.RgbColor? mainColor, G733HidClient.RgbColor? color)
         {
-            _hid.SetLights(mainColor, logoColor);
+            _hid.SetLights(mainColor, color);
         }
+        
+        /// <summary>
+        /// Get auto power off time stored in device memory
+        /// </summary>
+        /// <returns></returns>
         
         public int GetAutoPowerOff()
         {
             return _hid.GetAutoPowerOff();
         }
+        /// <summary>
+        /// Set auto power off time stored in device memory
+        /// </summary>
+        /// <param name="minutes"></param>
 
         public void SetAutoPowerOff(int minutes)
         {

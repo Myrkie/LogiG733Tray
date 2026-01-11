@@ -97,5 +97,20 @@ namespace LogiG733Tray.Utils
             }
             return CreateIconFromBitmap(bmp);
         }
+        
+        
+        internal static string GetLocalIp()
+        {
+            return System.Net.NetworkInformation.NetworkInterface
+                       .GetAllNetworkInterfaces()
+                       .Where(n =>
+                           n.OperationalStatus == System.Net.NetworkInformation.OperationalStatus.Up &&
+                           n.NetworkInterfaceType != System.Net.NetworkInformation.NetworkInterfaceType.Loopback)
+                       .SelectMany(n => n.GetIPProperties().UnicastAddresses)
+                       .FirstOrDefault(a => a.Address.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork)?
+                       .Address.ToString()
+                   ?? "N/A";
+        }
+
     }
 }

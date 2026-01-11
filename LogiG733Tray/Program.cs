@@ -1,4 +1,5 @@
-﻿using LogiG733Tray.G733;
+﻿using LogiG733Tray.API;
+using LogiG733Tray.G733;
 using Serilog;
 
 namespace LogiG733Tray
@@ -14,6 +15,8 @@ namespace LogiG733Tray
         private static G733BatteryMonitor? _batteryMonitor;
 
         public static NotifyIcon NotifyIcon() => _notifyIcon;
+
+        private static readonly bool ApiEnabled = Config.Instance.InitializeApi;
 
         [STAThread]
         private static void Main()
@@ -56,7 +59,9 @@ namespace LogiG733Tray
             var connectReceiverItem = new ToolStripMenuItem(
                 "Connect to receiver",
                 null,
+#pragma warning disable IL3050
                 (_, _) => { AttachDevice(G733Device.TryConnectReceiver(out var device) ? device : null); });
+#pragma warning restore IL3050
 
             contextMenu.Items.Add(colorPickerItem);
             contextMenu.Items.Add(connectReceiverItem);
@@ -71,11 +76,12 @@ namespace LogiG733Tray
                 Text = "LogiTray Battery Monitor"
             };
 
+#pragma warning disable IL3050
             AttachDevice(G733Device.GetDevice());
+#pragma warning restore IL3050
 
             Application.Run();
             return;
-
             void AttachDevice(G733Device? newDevice)
             {
                 if (_batteryMonitor != null)
@@ -100,6 +106,13 @@ namespace LogiG733Tray
 
                 _batteryMonitor = new G733BatteryMonitor(_g733);
                 _batteryMonitor.BatteryUpdated += UpdateUi;
+
+                if (ApiEnabled)
+                {
+                    var apiHost = new ApiHost(_g733, _batteryMonitor);
+                
+                    apiHost.Start();
+                }
 
                 _g733.ConnectionStateChanged += OnConnectionStateChanged;
 
@@ -200,7 +213,7 @@ namespace LogiG733Tray
         {
             if (_lightControlForm == null || _lightControlForm.IsDisposed)
             {
-                _lightControlForm = new LightControlForm(_g733, _batteryMonitor);
+                _lightControlForm = new LightControlForm(_g733, _batteryMonitor, ApiEnabled);
                 _lightControlForm.Show();
             }
             else if (!_lightControlForm.Visible)

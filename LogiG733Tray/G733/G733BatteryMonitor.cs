@@ -8,7 +8,7 @@ namespace LogiG733Tray.G733
         private readonly Timer _timer;
 
         public event Action<BatteryInfo?>? BatteryUpdated;
-
+        public BatteryInfo? LatestBattery { get; private set; }
         public G733BatteryMonitor(G733Device? device, double intervalMs = 5000)
         {
             if (device != null) _device = device;
@@ -23,10 +23,17 @@ namespace LogiG733Tray.G733
             try
             {
                 var battery = _device?.GetBatteryInfo();
+                LatestBattery = battery;
                 BatteryUpdated?.Invoke(battery);
             }
             catch
             {
+                LatestBattery = new BatteryInfo
+                {
+                    Level = -1,
+                    VoltageMv = -1,
+                    Status = BatteryStatus.Unavailable
+                };
                 BatteryUpdated?.Invoke(new BatteryInfo
                 {
                     Level = -1,
