@@ -181,7 +181,7 @@ namespace LogiTrayAndroid
                     {
                         _tvNextRefresh.Text = _httpService.IsConnected
                             ? $"Next refresh in: {_nextRefreshSeconds}s"
-                            : "Next refresh: N/A";
+                            : "Next refresh: -s";
                     });
 
                     await Task.Delay(1000, token);
@@ -231,7 +231,7 @@ namespace LogiTrayAndroid
             {
                 if (_httpService.IsConnected) return;
                 _tvDevice.Text = "Device: Not Detected";
-                _tvNextRefresh.Text = "Next refresh: N/A";
+                _tvNextRefresh.Text = "Next refresh: -s";
             });
         }
 

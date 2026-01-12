@@ -29,7 +29,7 @@
 
             <TextView
                     android:id="@+id/tvNextRefresh"
-                    android:text="Next refresh in: s"
+                    android:text="Next refresh in: -s"
                     android:textColor="#FFFFFF"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
