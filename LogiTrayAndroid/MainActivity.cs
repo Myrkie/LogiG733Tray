@@ -120,14 +120,12 @@ namespace LogiTrayAndroid
             var savedIp = savedPrefs?.GetString("MachineIP", null);
             var savedApiKey = savedPrefs?.GetString("ApiKey", null);
 
-            if (!string.IsNullOrWhiteSpace(savedIp) && !string.IsNullOrWhiteSpace(savedApiKey))
-            {
-                _etIpAddress.Text = savedIp;
-                _etApiKey.Text = savedApiKey;
-                _httpService.SetConnection(savedIp, savedApiKey);
+            if (string.IsNullOrWhiteSpace(savedIp) || string.IsNullOrWhiteSpace(savedApiKey)) return;
+            _etIpAddress.Text = savedIp;
+            _etApiKey.Text = savedApiKey;
+            _httpService.SetConnection(savedIp, savedApiKey);
 
-                StartRefreshLoop();
-            }
+            StartRefreshLoop();
         }
 
         protected override void OnPause()
@@ -260,6 +258,20 @@ namespace LogiTrayAndroid
             {
                 Logger.Error("Unauthorized API key, stopping refresh loop.");
                 StopRefreshLoop();
+                return false;
+            }
+            catch (HttpRequestException ex)
+            {
+                RunOnUiThread(() =>
+                {
+                    Toast.MakeText(this, $"Failed to connect to {ex.Message}, check that LogiG733Tray is running",
+                        ToastLength.Short)?.Show();
+                });
+                StopRefreshLoop();
+                return false;
+            }
+            catch (OperationCanceledException)
+            {
                 return false;
             }
             catch (Exception ex)

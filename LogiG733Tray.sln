@@ -4,6 +4,22 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LogiG733Tray", "LogiG733Tra
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LogiTrayAndroid", "LogiTrayAndroid\LogiTrayAndroid.csproj", "{D2CEC1EC-D419-46DE-9C84-2FE9FB3CA57F}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tools", "Tools", "{8640FC7B-3319-48AD-B5C3-53FBF418ABCC}"
+	ProjectSection(SolutionItems) = preProject
+		build.bat = build.bat
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Builds", "Builds", "{BBC6B8AD-C33F-4D30-82B2-665B2A1F7C99}"
+	ProjectSection(SolutionItems) = preProject
+		Builds\Android\com.Myrkur.LogiTrayAndroidCompanion-Signed.aab = Builds\Android\com.Myrkur.LogiTrayAndroidCompanion-Signed.aab
+		Builds\Android\com.Myrkur.LogiTrayAndroidCompanion-Signed.apk = Builds\Android\com.Myrkur.LogiTrayAndroidCompanion-Signed.apk
+		Builds\Android\com.Myrkur.LogiTrayAndroidCompanion.aab = Builds\Android\com.Myrkur.LogiTrayAndroidCompanion.aab
+		Builds\Android\_Microsoft.Android.Resource.Designer.dll = Builds\Android\_Microsoft.Android.Resource.Designer.dll
+		Builds\Windows\aspnetcorev2_inprocess.dll = Builds\Windows\aspnetcorev2_inprocess.dll
+		Builds\Windows\LogiG733Tray-X64Rls.exe = Builds\Windows\LogiG733Tray-X64Rls.exe
+		Builds\Windows\LogiG733Tray-X64Rls.pdb = Builds\Windows\LogiG733Tray-X64Rls.pdb
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -20,5 +36,6 @@ Global
 		{D2CEC1EC-D419-46DE-9C84-2FE9FB3CA57F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
+		{BBC6B8AD-C33F-4D30-82B2-665B2A1F7C99} = {8640FC7B-3319-48AD-B5C3-53FBF418ABCC}
 	EndGlobalSection
 EndGlobal

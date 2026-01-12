@@ -15,7 +15,7 @@ namespace LogiG733Tray.API
         {
             var machineGuid = GetMachineGuid();
             var apiKey = ComputeSha256Hash($"LogiTrayControl{machineGuid}");
-            return ComputeSha256Hash(apiKey);
+            return ComputeSha256Hash(apiKey)[..30];
         }
 
         private static string GetMachineGuid()
