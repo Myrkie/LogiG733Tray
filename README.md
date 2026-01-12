@@ -6,8 +6,7 @@ Tray and battery readout for the Logitech G733 Lightspeed without Ghub.
 For The Windows platform only
 
 ## Installation
-1. Install the [.NET Desktop Runtime 10.0.x](https://dotnet.microsoft.com/en-us/download/dotnet/10.0)
-2. Download the latest [release](https://github.com/Myrkie/LogiG733Tray/releases) and run.
+1. Download the latest [release](https://github.com/Myrkie/LogiG733Tray/releases) and run.
 
 
 ## Android Companion app Install
