@@ -91,14 +91,16 @@ namespace LogiTrayAndroid.Services
             }
         }
 
-        public async Task SetLightAsync(string target, int r, int g, int b)
+        public async Task SetLightAsync(string target, int r, int g, int b, LightMode mode = LightMode.Static)
         {
             EnsureClient();
+            
             var payload = new SetLightRequest
             {
                 Target = target,
                 UpperR = r, UpperG = g, UpperB = b,
-                LowerR = r, LowerG = g, LowerB = b
+                LowerR = r, LowerG = g, LowerB = b,
+                Mode = mode
             };
 
             var json = JsonSerializer.Serialize(payload, AppJsonContext.Default.SetLightRequest);

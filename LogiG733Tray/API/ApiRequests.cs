@@ -1,4 +1,6 @@
-﻿namespace LogiG733Tray.API
+﻿using LogiG733Tray.G733;
+
+namespace LogiG733Tray.API
 {
     public record PowerOffRequest(int Minutes);
     
@@ -9,6 +11,7 @@
         byte? UpperB = null,
         byte? LowerR = null,
         byte? LowerG = null,
-        byte? LowerB = null
+        byte? LowerB = null,
+        G733HidClient.LightMode? Mode = null
     );
 }

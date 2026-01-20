@@ -1,6 +1,9 @@
-﻿using LogiG733Tray.API;
+﻿using System.Drawing.Drawing2D;
+using LogiG733Tray.API;
 using LogiG733Tray.G733;
+using LogiG733Tray.Utils;
 using Serilog;
+using Serilog.Sinks.SystemConsole.Themes;
 
 namespace LogiG733Tray
 {
@@ -26,7 +29,7 @@ namespace LogiG733Tray
                 .WriteTo.Console(
                     outputTemplate:
                     "[{Timestamp:HH:mm:ss} {Level:u3}] [{SourceContext}] {Message:lj}{NewLine}{Exception}",
-                    theme: Serilog.Sinks.SystemConsole.Themes.AnsiConsoleTheme.Code)
+                    theme: AnsiConsoleTheme.Code)
                 .WriteTo.File(
                     path: "logs/log-.txt",
                     outputTemplate:
@@ -38,7 +41,7 @@ namespace LogiG733Tray
 
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            Utils.Utilities.SingleInstanceCheck();
+            Utilities.SingleInstanceCheck();
 
             var contextMenu = new ContextMenuStrip();
 
@@ -153,7 +156,7 @@ namespace LogiG733Tray
                             batteryItemMv.Text =
                                 $"Battery Voltage: {battery.VoltageMv} mV";
 
-                            _notifyIcon.Icon = Utils.Utilities.CreateBatteryIcon(
+                            _notifyIcon.Icon = Utilities.CreateBatteryIcon(
                                     battery.Level,
                                     battery.Status);
                         }
@@ -162,9 +165,7 @@ namespace LogiG733Tray
             }
         }
 
-        private static void ShowSleepingState(
-            ToolStripMenuItem batteryItem,
-            ToolStripMenuItem batteryItemMv)
+        private static void ShowSleepingState(ToolStripMenuItem batteryItem, ToolStripMenuItem batteryItemMv)
         {
             batteryItem.Text = "Battery: Device Asleep";
             batteryItemMv.Text = "Battery Voltage: Device Asleep";
@@ -173,23 +174,19 @@ namespace LogiG733Tray
             using var g = Graphics.FromImage(bmp);
 
             g.Clear(Color.Transparent);
-            g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+            g.SmoothingMode = SmoothingMode.AntiAlias;
 
             using var moonBrush = new SolidBrush(Color.Yellow);
             g.FillEllipse(moonBrush, 2, 2, 12, 12);
 
             using var eraseBrush = new SolidBrush(Color.Transparent);
-            g.CompositingMode = System.Drawing.Drawing2D.CompositingMode.SourceCopy;
+            g.CompositingMode = CompositingMode.SourceCopy;
             g.FillEllipse(eraseBrush, 6, 2, 8, 12);
 
-            Utils.Utilities.SetNotifyIcon(
-                Utils.Utilities.CreateIconFromBitmap(bmp));
+            Utilities.SetNotifyIcon(Utilities.CreateIconFromBitmap(bmp));
         }
 
-        private static void ShowNoDeviceState(
-            ToolStripMenuItem deviceItem,
-            ToolStripMenuItem batteryItem,
-            ToolStripMenuItem batteryItemMv)
+        private static void ShowNoDeviceState(ToolStripMenuItem deviceItem, ToolStripMenuItem batteryItem, ToolStripMenuItem batteryItemMv)
         {
             deviceItem.Text = "Device: Not detected";
             batteryItem.Text = "Battery: N/A";
@@ -205,8 +202,7 @@ namespace LogiG733Tray
             g.DrawLine(pen, 3, 3, 12, 12);
             g.DrawLine(pen, 12, 3, 3, 12);
 
-            Utils.Utilities.SetNotifyIcon(
-                Utils.Utilities.CreateIconFromBitmap(bmp));
+            Utilities.SetNotifyIcon(Utilities.CreateIconFromBitmap(bmp));
         }
 
         private static void ShowLightControlForm()

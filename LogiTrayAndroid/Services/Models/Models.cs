@@ -11,6 +11,7 @@ namespace LogiTrayAndroid.Services.Models
         public int LowerR { get; set; }
         public int LowerG { get; set; }
         public int LowerB { get; set; }
+        public LightMode Mode { get; set; }
     }
 
     public class SetAutoPowerOffRequest
@@ -37,6 +38,15 @@ namespace LogiTrayAndroid.Services.Models
         public int VoltageMv { get; init; }
     }
 
+    public enum LightMode : byte
+    {
+        Off = 0x00,
+        Static = 0x01,
+        // ReSharper disable once UnusedMember.Local
+        Breathing = 0x02,
+        // ReSharper disable once UnusedMember.Local
+        Cycle = 0x03
+    }
 
     public enum BatteryStatus
     {

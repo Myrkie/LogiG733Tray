@@ -10,7 +10,6 @@ namespace LogiG733Tray
         private static readonly ILogger Logger = Log.ForContext<LightControlForm>();
         
         private readonly G733Device? _g733;
-        private ColorDialog? _colorDialog;
         private Label? _label;
         private Button? _btnUpperLight;
         private Button? _btnLowerLight;
@@ -60,8 +59,6 @@ namespace LogiG733Tray
             MaximizeBox = false;
             BackColor = Utils.UiUtilities.Bg;
 
-            _colorDialog = new ColorDialog { FullOpen = true, AnyColor = true };
-
             _label = new Label
             {
                 Text = $"Device: {_g733?.Name}",
@@ -105,11 +102,11 @@ namespace LogiG733Tray
                 TextAlign = ContentAlignment.MiddleRight
             };
 
-            _btnUpperLight.Click += (_, _) => SetLight(G733HidClient.LightTarget.Upper);
-            _btnLowerLight.Click += (_, _) => SetLight(G733HidClient.LightTarget.Lower);
+            _btnUpperLight.Click += (_, _) => SetLight(G733HidClient.LightTarget.Upper, G733HidClient.LightMode.Static);
+            _btnLowerLight.Click += (_, _) => SetLight(G733HidClient.LightTarget.Lower, G733HidClient.LightMode.Static);
             _btnBothLights.Click += (_, _) => SetBothLights();
             _btnLightsOff.Click += (_, _) => _g733?.DisableLights();
-            _btnBestColor.Click += (_, _) => _g733?.SetLights(G733HidClient.Colors.Purple, G733HidClient.Colors.Purple);
+            _btnBestColor.Click += (_, _) => _g733?.SetLights(G733HidClient.Colors.Purple, G733HidClient.Colors.Purple, G733HidClient.LightMode.Static);
             _btnGetPowerOff.Click += (_, _) => _txtAutoPowerOff.Text = _g733?.GetAutoPowerOff().ToString();
             _btnSetAutoPowerOff.Click += BtnSetAutoPowerOff_Click;
 
@@ -292,8 +289,6 @@ namespace LogiG733Tray
             timer.Start();
         }
 
-
-
         private void UpdateBatteryUi(BatteryInfo? battery)
         {
             if (battery is { Status: BatteryStatus.Unavailable })
@@ -333,35 +328,39 @@ namespace LogiG733Tray
             }
         }
 
-        private void SetLight(G733HidClient.LightTarget target)
+        private void SetLight(G733HidClient.LightTarget target, G733HidClient.LightMode mode)
         {
-            if (_colorDialog != null && _colorDialog.ShowDialog() != DialogResult.OK) return;
+            var initialColor = new G733HidClient.RgbColor(255, 0, 0); // fallback initial color
+            var picker = new ColorAndModePickerForm(initialColor, mode);
+            if (picker.ShowDialog() != DialogResult.OK) return;
 
-            if (_colorDialog == null) return;
-            var color = _colorDialog.Color;
-            var rgb = new G733HidClient.RgbColor(color.R, color.G, color.B);
+            var rgb = picker.SelectedColor;
+            var selectedMode = picker.SelectedMode;
 
             switch (target)
             {
                 case G733HidClient.LightTarget.Upper:
-                    _g733?.SetUpperLightBar(rgb);
+                    _g733?.SetUpperLightBar(rgb, selectedMode);
                     break;
                 case G733HidClient.LightTarget.Lower:
-                    _g733?.SetLowerLightBar(rgb);
+                    _g733?.SetLowerLightBar(rgb, selectedMode);
                     break;
             }
         }
 
+
         private void SetBothLights()
         {
-            if (_colorDialog != null && _colorDialog.ShowDialog() != DialogResult.OK) return;
+            var initialColor = new G733HidClient.RgbColor(255, 0, 0);
+            var picker = new ColorAndModePickerForm(initialColor, G733HidClient.LightMode.Static);
+            if (picker.ShowDialog() != DialogResult.OK) return;
 
-            if (_colorDialog == null) return;
-            var color = _colorDialog.Color;
-            var rgb = new G733HidClient.RgbColor(color.R, color.G, color.B);
+            var rgb = picker.SelectedColor;
+            var selectedMode = picker.SelectedMode;
 
-            _g733?.SetLights(rgb, rgb);
+            _g733?.SetLights(rgb, rgb, selectedMode);
         }
+
         
         private void UpdateConnectionStateUi(DeviceConnectionState state)
         {
@@ -377,8 +376,7 @@ namespace LogiG733Tray
                     break;
             }
         }
-
-
+        
         
         private void SetupOfflineOverlay()
         {

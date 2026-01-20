@@ -1,7 +1,7 @@
 ﻿using System.Text.Json;
 using System.Text.Json.Serialization;
 
-namespace LogiG733Tray
+namespace LogiG733Tray.Utils
 {
     [JsonSerializable(typeof(Config))]
     [JsonSourceGenerationOptions(GenerationMode = JsonSourceGenerationMode.Default, WriteIndented = true, AllowTrailingCommas = true)]
@@ -36,6 +36,5 @@ namespace LogiG733Tray
 
             File.WriteAllText(ConfigPath, json);
         }
-
     }
 }

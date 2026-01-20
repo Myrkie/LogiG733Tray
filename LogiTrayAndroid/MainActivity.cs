@@ -42,7 +42,7 @@ namespace LogiTrayAndroid
         private CancellationTokenSource? _refreshCts;
         private int _nextRefreshSeconds;
 
-        private TaskCompletionSource<int[]>? _colorPickerTcs;
+        private TaskCompletionSource<(int[] Color, LightMode Mode)>? _colorPickerTcs;
 
         protected override void OnCreate(Bundle? savedInstanceState)
         {
@@ -72,7 +72,7 @@ namespace LogiTrayAndroid
             _btnLowerLight.Click += async (_, _) => await PickColorAndSetLight("lower");
             _btnBothLights.Click += async (_, _) => await PickColorAndSetLight("both");
             _btnLightsOff.Click += async (_, _) => await SafeCall(() => _httpService.TurnOffLightsAsync());
-            _btnBestColor.Click += async (_, _) => await SafeCall(() => _httpService.SetLightAsync("both", 255, 0, 255));
+            _btnBestColor.Click += async (_, _) => await SafeCall(() => _httpService.SetLightAsync("both", 255, 0, 255, LightMode.Cycle));
 
             _btnSetAutoPowerOff.Click += async (_, _) =>
             {
@@ -283,22 +283,43 @@ namespace LogiTrayAndroid
 
         private async Task PickColorAndSetLight(string target)
         {
-            _colorPickerTcs = new TaskCompletionSource<int[]>();
+            _colorPickerTcs = new TaskCompletionSource<(int[], LightMode)>();
 
             RunOnUiThread(() =>
             {
                 var builder = new AlertDialog.Builder(this);
-                builder.SetTitle("Pick a Color");
+                builder.SetTitle("Pick Color and Mode");
 
                 var layout = new LinearLayout(this)
                 {
                     Orientation = Orientation.Vertical,
-                    DividerPadding = 20
+                    DividerPadding = 20,
                 };
+
+                var modeSpinner = new Spinner(this);
+
+                var modes = Enum.GetValues(typeof(LightMode))
+                    .Cast<LightMode>()
+                    .ToList();
+
+                var adapter = new ArrayAdapter(
+                    this,
+                    Android.Resource.Layout.SimpleSpinnerItem,
+                    modes.Select(m => m.ToString()).ToList()
+                );
+                
+                adapter.SetDropDownViewResource(Android.Resource.Layout.SimpleSpinnerDropDownItem);
+                modeSpinner.Adapter = adapter;
+
+                var selectedMode = LightMode.Static;
+                modeSpinner.SetSelection(modes.IndexOf(selectedMode));
+
+                layout.AddView(modeSpinner);
 
                 var preview = new View(this)
                 {
-                    LayoutParameters = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MatchParent, 100)
+                    LayoutParameters = new LinearLayout.LayoutParams(
+                        ViewGroup.LayoutParams.MatchParent, 100)
                 };
                 layout.AddView(preview);
 
@@ -317,11 +338,21 @@ namespace LogiTrayAndroid
                 layout.AddView(tvB);
                 layout.AddView(sbB);
 
+                void SetColorControlsEnabled(bool enabled)
+                {
+                    sbR.Enabled = sbG.Enabled = sbB.Enabled = enabled;
+                    tvR.Enabled = tvG.Enabled = tvB.Enabled = enabled;
+                    preview.Alpha = enabled ? 1f : 0.3f;
+                }
+
                 void UpdatePreview()
                 {
+                    if (!sbR.Enabled) return;
+
                     int r = sbR.Progress;
                     int g = sbG.Progress;
                     int b = sbB.Progress;
+
                     preview.SetBackgroundColor(Color.Argb(255, r, g, b));
                     tvR.Text = $"R: {r}";
                     tvG.Text = $"G: {g}";
@@ -331,25 +362,28 @@ namespace LogiTrayAndroid
                 sbR.ProgressChanged += (_, e) => { if (e.FromUser) UpdatePreview(); };
                 sbG.ProgressChanged += (_, e) => { if (e.FromUser) UpdatePreview(); };
                 sbB.ProgressChanged += (_, e) => { if (e.FromUser) UpdatePreview(); };
+                modeSpinner.ItemSelected += (_, e) =>
+                {
+                    selectedMode = modes[e.Position];
+
+                    SetColorControlsEnabled(selectedMode != LightMode.Cycle);
+                };
 
                 builder.SetView(layout);
 
                 builder.SetPositiveButton("OK", (_, _) =>
                 {
-                    int r = sbR.Progress;
-                    int g = sbG.Progress;
-                    int b = sbB.Progress;
-                    _colorPickerTcs.TrySetResult([r, g, b]);
+                    _colorPickerTcs.TrySetResult(([sbR.Progress, sbG.Progress, sbB.Progress], selectedMode));
                 });
 
                 builder.SetNegativeButton("Cancel", (_, _) => { });
 
-                var dialog = builder.Create();
-                dialog?.Show();
+                
+                builder.Create()?.Show();
             });
 
-            int[] selected = await _colorPickerTcs.Task;
-            await SafeCall(() => _httpService.SetLightAsync(target, selected[0], selected[1], selected[2]));
+            var selected = await _colorPickerTcs.Task;
+            await SafeCall(() => _httpService.SetLightAsync(target, selected.Color[0], selected.Color[1], selected.Color[2], selected.Mode));
         }
     }
 }

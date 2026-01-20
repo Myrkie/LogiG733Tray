@@ -51,7 +51,7 @@ namespace LogiG733Tray.G733
             Upper = 0x01
         }
 
-        private enum LightMode : byte
+        public enum LightMode : byte
         {
             Off = 0x00,
             Static = 0x01,
@@ -77,10 +77,9 @@ namespace LogiG733Tray.G733
             public static readonly RgbColor Blue = new(0, 0, 255);
             public static readonly RgbColor White = new(255, 255, 255);
             public static readonly RgbColor Yellow = new(255, 255, 0);
-            public static readonly RgbColor Off = new(0, 0, 0);
         }
 
-        private byte[] BuildLightCommand(LightTarget target, LightMode mode, RgbColor color, byte brightness = 0x64)
+        private byte[] BuildLightCommand(LightTarget target, LightMode? mode, RgbColor color, byte brightness = 0x64)
         {
             byte[] command = new byte[HidppLongMessageLength];
 
@@ -89,13 +88,13 @@ namespace LogiG733Tray.G733
             command[2] = 0x04;                // Lights function
             command[3] = 0x3C;                // Sub-command
             command[4] = (byte)target;        // Target: Upper or Lower
-            command[5] = (byte)mode;          // Mode: Static, Off, etc.
+            command[5] = (byte)mode!;          // Mode: Static, Off, etc.
 
             command[6] = color.R;
             command[7] = color.G;
             command[8] = color.B;
 
-            // Timing / animation bytes??
+            // Required for modes to function
             command[9] = 0x0F;
             command[10] = 0xA0;
             command[11] = 0x00;
@@ -107,18 +106,20 @@ namespace LogiG733Tray.G733
 
             return command;
         }
-        
+
         /// <summary>
         /// Sets the color or turns off the lights for a specific target.
         /// </summary>
         /// <param name="target"></param>
         /// <param name="color"></param>
-        public void SetLight(LightTarget target, RgbColor? color = null)
+        /// <param name="mode"></param>
+        public void SetLight(LightTarget target, RgbColor color, LightMode? mode)
         {
             using var stream = device.Open();
 
-            LightMode mode = color.HasValue ? LightMode.Static : LightMode.Off;
-            RgbColor rgb = color ?? Colors.Off;
+            mode ??= LightMode.Off;
+
+            RgbColor rgb = color;
 
             byte[] command = BuildLightCommand(target, mode, rgb);
 
@@ -129,6 +130,47 @@ namespace LogiG733Tray.G733
             if (response[2] == 0xFF)
                 SetOffline();
         }
+        
+        /// <summary>
+        /// Sets both upper and lower lights at once.
+        /// Pass null to disable a bar.
+        /// </summary>
+        /// <param name="upperColor"></param>
+        /// <param name="lowerColor"></param>
+        /// <param name="mode"></param>
+        public void SetLights(RgbColor upperColor, RgbColor lowerColor, LightMode? mode)
+        {
+            mode ??= LightMode.Off;
+            
+            // Upper light
+            {
+                using var stream = device.Open();
+
+                RgbColor rgb = upperColor;
+                byte[] command = BuildLightCommand(LightTarget.Upper, mode, rgb);
+                stream.Write(command, 0, command.Length);
+                byte[] response = new byte[HidppLongMessageLength];
+
+                if (response[2] == 0xFF)
+                    SetOffline();
+            }
+
+            Thread.Sleep(20);
+
+            // Lower light
+            {
+                using var stream = device.Open();
+
+                RgbColor rgb = lowerColor;
+                byte[] command = BuildLightCommand(LightTarget.Lower, mode, rgb);
+                stream.Write(command, 0, command.Length);
+                byte[] response = new byte[HidppLongMessageLength];
+
+                if (response[2] == 0xFF)
+                    SetOffline();
+            }
+        }
+        
         /// <summary>
         /// Gets auto power off timer
         /// </summary>
@@ -194,50 +236,13 @@ namespace LogiG733Tray.G733
             SetOffline();
             return -1;
         }
-
-        /// <summary>
-        /// Sets both upper and lower lights at once.
-        /// Pass null to disable a bar.
-        /// </summary>
-        /// <param name="upperColor"></param>
-        /// <param name="lowerColor"></param>
-        public void SetLights(RgbColor? upperColor, RgbColor? lowerColor)
-        {
-            // Upper light
-            {
-                using var stream = device.Open();
-                LightMode mode = upperColor.HasValue ? LightMode.Static : LightMode.Off;
-                RgbColor rgb = upperColor ?? Colors.Off;
-                byte[] command = BuildLightCommand(LightTarget.Upper, mode, rgb);
-                stream.Write(command, 0, command.Length);
-                byte[] response = new byte[HidppLongMessageLength];
-
-                if (response[2] == 0xFF)
-                    SetOffline();
-            }
-
-            Thread.Sleep(20);
-
-            // Lower light
-            {
-                using var stream = device.Open();
-                LightMode mode = lowerColor.HasValue ? LightMode.Static : LightMode.Off;
-                RgbColor rgb = lowerColor ?? Colors.Off;
-                byte[] command = BuildLightCommand(LightTarget.Lower, mode, rgb);
-                stream.Write(command, 0, command.Length);
-                byte[] response = new byte[HidppLongMessageLength];
-
-                if (response[2] == 0xFF)
-                    SetOffline();
-            }
-        }
         
         /// <summary>
         /// Turns off all lights.
         /// </summary>
         public void DisableLights()
         {
-            SetLights(null, null);
+            SetLights(new RgbColor(0, 0,0), new RgbColor(0, 0,0), LightMode.Off);
         }
         public byte[] SendBatteryRequest()
         {

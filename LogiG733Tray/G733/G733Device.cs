@@ -138,27 +138,27 @@ namespace LogiG733Tray.G733
         /// Set the upper light bar color.
         /// Pass null to disable the bar.
         /// </summary>
-        public void SetUpperLightBar(G733HidClient.RgbColor? color)
+        public void SetUpperLightBar(G733HidClient.RgbColor color, G733HidClient.LightMode? mode)
         {
-            _hid.SetLight(G733HidClient.LightTarget.Upper, color);
+            _hid.SetLight(G733HidClient.LightTarget.Upper, color, mode);
         }
 
         /// <summary>
         /// Set the lower light bar color.
         /// Pass null to disable the bar.
         /// </summary>
-        public void SetLowerLightBar(G733HidClient.RgbColor? color)
+        public void SetLowerLightBar(G733HidClient.RgbColor color, G733HidClient.LightMode? mode)
         {
-            _hid.SetLight(G733HidClient.LightTarget.Lower, color);
+            _hid.SetLight(G733HidClient.LightTarget.Lower, color, mode);
         }
 
         /// <summary>
         /// Set upper and lower light bars at once.
         /// Pass null to disable a bar.
         /// </summary>
-        public void SetLights(G733HidClient.RgbColor? mainColor, G733HidClient.RgbColor? color)
+        public void SetLights(G733HidClient.RgbColor mainColor, G733HidClient.RgbColor color, G733HidClient.LightMode? mode)
         {
-            _hid.SetLights(mainColor, color);
+            _hid.SetLights(mainColor, color, mode);
         }
         
         /// <summary>

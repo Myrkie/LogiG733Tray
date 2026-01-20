@@ -64,20 +64,22 @@ namespace LogiG733Tray.API
 
             app.MapPost("/lights", (LightRequest req) =>
             {
+                var mode = req.Mode ?? G733HidClient.LightMode.Static;
+                
                 switch (req.Target.ToLower())
                 {
                     case "upper":
-                        device.SetUpperLightBar(new G733HidClient.RgbColor(req.UpperR ?? 0, req.UpperG ?? 0, req.UpperB ?? 0));
+                        device.SetUpperLightBar(new G733HidClient.RgbColor(req.UpperR ?? 0, req.UpperG ?? 0, req.UpperB ?? 0), mode);
                         break;
 
                     case "lower":
-                        device.SetLowerLightBar(new G733HidClient.RgbColor(req.LowerR ?? 0, req.LowerG ?? 0, req.LowerB ?? 0));
+                        device.SetLowerLightBar(new G733HidClient.RgbColor(req.LowerR ?? 0, req.LowerG ?? 0, req.LowerB ?? 0), mode);
                         break;
 
                     case "both":
                         var upper = new G733HidClient.RgbColor(req.UpperR ?? 0, req.UpperG ?? 0, req.UpperB ?? 0);
                         var lower = new G733HidClient.RgbColor(req.LowerR ?? 0, req.LowerG ?? 0, req.LowerB ?? 0);
-                        device.SetLights(upper, lower);
+                        device.SetLights(upper, lower, mode);
                         break;
 
                     default:
