@@ -72,7 +72,7 @@ namespace LogiTrayAndroid
             _btnLowerLight.Click += async (_, _) => await PickColorAndSetLight("lower");
             _btnBothLights.Click += async (_, _) => await PickColorAndSetLight("both");
             _btnLightsOff.Click += async (_, _) => await SafeCall(() => _httpService.TurnOffLightsAsync());
-            _btnBestColor.Click += async (_, _) => await SafeCall(() => _httpService.SetLightAsync("both", 255, 0, 255, LightMode.Cycle));
+            _btnBestColor.Click += async (_, _) => await SafeCall(() => _httpService.SetLightAsync("both", 255, 0, 255));
 
             _btnSetAutoPowerOff.Click += async (_, _) =>
             {
