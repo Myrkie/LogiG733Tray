@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
+using Serilog;
 
 namespace LogiG733Tray.API
 {
@@ -17,8 +18,11 @@ namespace LogiG733Tray.API
                     0, ApiJsonContext.Default);
             });
 
-            builder.WebHost.UseUrls("http://0.0.0.0:5180");
+            var localip = Utils.Utilities.GetLocalIp();
 
+            builder.WebHost.UseUrls($"http://{localip}:5180");
+            builder.Host.UseSerilog();
+            
             var app = builder.Build();
 
             app.Use(async (ctx, next) =>
