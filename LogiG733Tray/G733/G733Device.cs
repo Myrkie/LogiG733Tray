@@ -1,4 +1,5 @@
 ﻿using HidSharp;
+using LogiG733Tray.Utils;
 using Serilog;
 
 namespace LogiG733Tray.G733
@@ -130,6 +131,21 @@ namespace LogiG733Tray.G733
                     return;
                 default:
                     SetConnectionState(DeviceConnectionState.HeadsetOnline);
+                    if (Config.Instance.OnConnectConfig.SetOnConnectColor)
+                    {
+                        Logger.Debug("Setting OnConnectColor to: {UR}|{UG}|{UB}, {LR}|{LG}|{LB}, {OnConnectLightMode}", 
+                            Config.Instance.OnConnectConfig.OnConnectColorUpperColor.R, 
+                            Config.Instance.OnConnectConfig.OnConnectColorUpperColor.G, 
+                            Config.Instance.OnConnectConfig.OnConnectColorUpperColor.B, 
+                            Config.Instance.OnConnectConfig.OnConnectColorLowerColor.R, 
+                            Config.Instance.OnConnectConfig.OnConnectColorLowerColor.G, 
+                            Config.Instance.OnConnectConfig.OnConnectColorLowerColor.B, 
+                            Config.Instance.OnConnectConfig.OnConnectLightMode);
+
+                        SetLights(Config.Instance.OnConnectConfig.OnConnectColorUpperColor, 
+                            Config.Instance.OnConnectConfig.OnConnectColorLowerColor, 
+                            Config.Instance.OnConnectConfig.OnConnectLightMode);
+                    }
                     break;
             }
         }
@@ -156,9 +172,9 @@ namespace LogiG733Tray.G733
         /// Set upper and lower light bars at once.
         /// Pass null to disable a bar.
         /// </summary>
-        public void SetLights(G733HidClient.RgbColor mainColor, G733HidClient.RgbColor color, G733HidClient.LightMode? mode)
+        public void SetLights(G733HidClient.RgbColor upperColor, G733HidClient.RgbColor lowerColor, G733HidClient.LightMode? mode)
         {
-            _hid.SetLights(mainColor, color, mode);
+            _hid.SetLights(upperColor, lowerColor, mode);
         }
         
         /// <summary>

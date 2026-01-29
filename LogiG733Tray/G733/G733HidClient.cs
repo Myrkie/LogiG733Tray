@@ -1,4 +1,5 @@
-﻿using HidSharp;
+﻿using System.Text.Json.Serialization;
+using HidSharp;
 using Serilog;
 
 namespace LogiG733Tray.G733
@@ -50,7 +51,8 @@ namespace LogiG733Tray.G733
             Lower = 0x00,
             Upper = 0x01
         }
-
+        
+        [JsonConverter(typeof(JsonStringEnumConverter<LightMode>))]
         public enum LightMode : byte
         {
             Off = 0x00,
@@ -61,12 +63,7 @@ namespace LogiG733Tray.G733
             Cycle = 0x03
         }
 
-        public struct RgbColor(byte r, byte g, byte b)
-        {
-            public readonly byte R = r;
-            public readonly byte G = g;
-            public readonly byte B = b;
-        }
+        public readonly record struct RgbColor(byte R, byte G, byte B);
 
         // ReSharper disable once MemberCanBePrivate.Global
         public static class Colors
