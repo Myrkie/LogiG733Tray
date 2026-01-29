@@ -11,7 +11,7 @@
         <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
         <_SuppressWinFormsTrimError>true</_SuppressWinFormsTrimError>
         <Authors>Myrkur</Authors>
-        <Version>1.1.0</Version>
+        <Version>1.2.0</Version>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
         <EnableRuntimeMarshalling>true</EnableRuntimeMarshalling>
     </PropertyGroup>
