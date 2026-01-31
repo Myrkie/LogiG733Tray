@@ -85,7 +85,7 @@ namespace LogiG733Tray.G733
             command[2] = 0x04;                // Lights function
             command[3] = 0x3C;                // Sub-command
             command[4] = (byte)target;        // Target: Upper or Lower
-            command[5] = (byte)mode!;          // Mode: Static, Off, etc.
+            command[5] = (byte)mode!;         // Mode: Static, Off, Breathing
 
             command[6] = color.R;
             command[7] = color.G;

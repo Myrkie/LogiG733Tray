@@ -1,4 +1,6 @@
-﻿using LogiG733Tray.G733;
+﻿using LogiG733Tray.API.Models;
+using LogiG733Tray.G733;
+using LogiG733Tray.Utils;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
@@ -18,9 +20,10 @@ namespace LogiG733Tray.API
                     0, ApiJsonContext.Default);
             });
 
-            var localip = Utils.Utilities.GetLocalIp();
+            var localip = Utilities.GetLocalIp();
+            var localport = Config.Instance.Port;
 
-            builder.WebHost.UseUrls($"http://{localip}:5180");
+            builder.WebHost.UseUrls($"http://{localip}:{localport}");
             builder.Host.UseSerilog();
             
             var app = builder.Build();

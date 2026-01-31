@@ -1,5 +1,6 @@
 ﻿using LogiG733Tray.API;
 using LogiG733Tray.G733;
+using LogiG733Tray.Utils;
 using Serilog;
 
 namespace LogiG733Tray
@@ -57,26 +58,26 @@ namespace LogiG733Tray
             Size = _apiEnabled ? new Size(380, 440) : new Size(380, 365);
             FormBorderStyle = FormBorderStyle.FixedDialog;
             MaximizeBox = false;
-            BackColor = Utils.UiUtilities.Bg;
+            BackColor = UiUtilities.Bg;
 
             _label = new Label
             {
                 Text = $"Device: {_g733?.Name}",
                 Font = new Font("Segoe UI", 11, FontStyle.Bold),
-                ForeColor = Utils.UiUtilities.Accent,
+                ForeColor = UiUtilities.Accent,
                 Dock = DockStyle.Fill,
                 TextAlign = ContentAlignment.MiddleCenter
             };
 
-            _btnUpperLight = Utils.UiUtilities.StyledButton("Set Upper LightBar");
-            _btnLowerLight = Utils.UiUtilities.StyledButton("Set Lower LightBar");
-            _btnBothLights = Utils.UiUtilities.StyledButton("Set Both LightBars");
-            _btnLightsOff = Utils.UiUtilities.StyledButton("Turn Off LightBars");
-            _btnBestColor = Utils.UiUtilities.StyledButton("Best Color");
-            _btnGetPowerOff = Utils.UiUtilities.StyledButton("Get Auto Power-Off");
-            _btnSetAutoPowerOff = Utils.UiUtilities.StyledButton("Set Auto Power-Off");
+            _btnUpperLight = UiUtilities.StyledButton("Set Upper LightBar");
+            _btnLowerLight = UiUtilities.StyledButton("Set Lower LightBar");
+            _btnBothLights = UiUtilities.StyledButton("Set Both LightBars");
+            _btnLightsOff = UiUtilities.StyledButton("Turn Off LightBars");
+            _btnBestColor = UiUtilities.StyledButton("Best Color");
+            _btnGetPowerOff = UiUtilities.StyledButton("Get Auto Power-Off");
+            _btnSetAutoPowerOff = UiUtilities.StyledButton("Set Auto Power-Off");
 
-            var txtAutoPowerOffStyled = Utils.UiUtilities.StyledTextBox(out _txtAutoPowerOff, "Minutes (0 = Disabled)");
+            var txtAutoPowerOffStyled = UiUtilities.StyledTextBox(out _txtAutoPowerOff, "Minutes (0 = Disabled)");
 
             _batteryBar = new ProgressBar
             {
@@ -89,7 +90,7 @@ namespace LogiG733Tray
             _lblBatteryPercent = new Label
             {
                 Text = "Battery: --%",
-                ForeColor = Utils.UiUtilities.Text,
+                ForeColor = UiUtilities.Text,
                 Dock = DockStyle.Fill,
                 TextAlign = ContentAlignment.MiddleLeft
             };
@@ -97,7 +98,7 @@ namespace LogiG733Tray
             _lblBatteryVoltage = new Label
             {
                 Text = "Voltage: ---- mV",
-                ForeColor = Utils.UiUtilities.Muted,
+                ForeColor = UiUtilities.Muted,
                 Dock = DockStyle.Fill,
                 TextAlign = ContentAlignment.MiddleRight
             };
@@ -114,7 +115,7 @@ namespace LogiG733Tray
             {
                 Dock = DockStyle.Fill,
                 Padding = new Padding(12),
-                BackColor = Utils.UiUtilities.Card
+                BackColor = UiUtilities.Card
             };
 
             var table = new TableLayoutPanel
@@ -183,7 +184,7 @@ namespace LogiG733Tray
                 Dock = DockStyle.Bottom,
                 AutoSize = true,
                 Padding = new Padding(10, 6, 10, 6),
-                BackColor = Utils.UiUtilities.Card
+                BackColor = UiUtilities.Card
             };
 
             var footerLayout = new TableLayoutPanel
@@ -200,7 +201,7 @@ namespace LogiG733Tray
             var apiHeader = new Label
             {
                 Text = "API KEY",
-                ForeColor = Utils.UiUtilities.Muted,
+                ForeColor = UiUtilities.Muted,
                 Font = new Font("Segoe UI", 8, FontStyle.Bold),
                 Dock = DockStyle.Fill
             };
@@ -208,7 +209,7 @@ namespace LogiG733Tray
             var hintLabel = new Label
             {
                 Text = "<- CLICK TO COPY ->",
-                ForeColor = Utils.UiUtilities.Muted,
+                ForeColor = UiUtilities.Muted,
                 Font = new Font("Segoe UI", 7),
                 AutoSize = true,
                 Anchor = AnchorStyles.None
@@ -217,7 +218,7 @@ namespace LogiG733Tray
             var ipHeader = new Label
             {
                 Text = "LOCAL IP",
-                ForeColor = Utils.UiUtilities.Muted,
+                ForeColor = UiUtilities.Muted,
                 Font = new Font("Segoe UI", 8, FontStyle.Bold),
                 Dock = DockStyle.Fill,
                 TextAlign = ContentAlignment.MiddleRight
@@ -226,7 +227,7 @@ namespace LogiG733Tray
             _lblApiKey = new Label
             {
                 Text = ApiKeyGenerator.GetApiKey(),
-                ForeColor = Utils.UiUtilities.Text,
+                ForeColor = UiUtilities.Text,
                 Font = new Font("Consolas", 8),
                 AutoSize = true,
                 MaximumSize = new Size(240, 0),
