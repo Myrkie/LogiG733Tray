@@ -237,8 +237,8 @@ namespace LogiG733Tray
 
             _lblLocalIp = new Label
             {
-                Text = Utils.Utilities.GetLocalIp(),
-                ForeColor = Utils.UiUtilities.Text,
+                Text = $"{Utilities.GetLocalIp()}:{Config.Instance.Port}",
+                ForeColor = UiUtilities.Text,
                 Font = new Font("Consolas", 8),
                 AutoSize = true,
                 Cursor = Cursors.Hand,

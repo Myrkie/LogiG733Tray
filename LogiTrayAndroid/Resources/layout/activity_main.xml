@@ -189,14 +189,14 @@
                         android:layout_marginBottom="6dp"/>
 
                 <TextView
-                        android:text="Machine IP"
+                        android:text="Machine Address"
                         android:textColor="#AAAAAA"
                         android:textStyle="bold"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"/>
                 <EditText
                         android:id="@+id/etIpAddress"
-                        android:hint="Machine IP"
+                        android:hint="Machine Address"
                         android:inputType="text"
                         android:backgroundTint="#444444"
                         android:textColor="#FFFFFF"

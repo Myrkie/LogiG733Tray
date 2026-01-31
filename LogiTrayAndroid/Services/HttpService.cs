@@ -22,7 +22,7 @@ namespace LogiTrayAndroid.Services
             _client?.Dispose();
             _client = new HttpClient
             {
-                BaseAddress = new Uri($"http://{_ipAddress}:5180")
+                BaseAddress = new Uri($"http://{_ipAddress}")
             };
             _client.DefaultRequestHeaders.Clear();
             _client.DefaultRequestHeaders.Add("X-Api-Key", _apiKey);

@@ -26,6 +26,7 @@ namespace LogiG733Tray.Utils
         
         public bool InitializeApi { get; set; }
         public OnConnectConfig OnConnectConfig { get; set; } = new();
+        public int Port { get; set; } = 5180;
 
         static Config LoadConfig()
         {

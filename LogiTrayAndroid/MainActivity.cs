@@ -96,15 +96,15 @@ namespace LogiTrayAndroid
 
             _btnSetConnection.Click += (_, _) =>
             {
-                var ip = _etIpAddress.Text?.Trim();
+                var address = _etIpAddress.Text?.Trim();
                 var apiKey = _etApiKey.Text?.Trim();
 
                 try
                 {
-                    _httpService.SetConnection(ip, apiKey);
+                    _httpService.SetConnection(address, apiKey);
 
                     var prefs = GetSharedPreferences("LogiTrayPrefs", FileCreationMode.Private);
-                    prefs?.Edit()?.PutString("MachineIP", ip)?.PutString("ApiKey", apiKey)?.Apply();
+                    prefs?.Edit()?.PutString("MachineAddress", address)?.PutString("ApiKey", apiKey)?.Apply();
 
                     Toast.MakeText(this, "Connection set!", ToastLength.Short)?.Show();
 
@@ -117,7 +117,7 @@ namespace LogiTrayAndroid
             };
 
             var savedPrefs = GetSharedPreferences("LogiTrayPrefs", FileCreationMode.Private);
-            var savedIp = savedPrefs?.GetString("MachineIP", null);
+            var savedIp = savedPrefs?.GetString("MachineAddress", null);
             var savedApiKey = savedPrefs?.GetString("ApiKey", null);
 
             if (string.IsNullOrWhiteSpace(savedIp) || string.IsNullOrWhiteSpace(savedApiKey)) return;
@@ -246,7 +246,7 @@ namespace LogiTrayAndroid
                 {
                     _tvDevice.Text = $"Device: {status!.Device}";
                     _pbBattery.Progress = status.Battery!.Level;
-                    _tvBatteryPercent.Text = $"Battery: {status.Battery.Level}%";
+                    _tvBatteryPercent.Text = $"Battery: {status.Battery.Level}% ({status.Battery.Status})";
                     _tvBatteryVoltage.Text = $"Voltage: {status.Battery.VoltageMv} mV";
 
                     UpdateHeadsetState(status.State == DeviceConnectionState.HeadsetSleeping);
