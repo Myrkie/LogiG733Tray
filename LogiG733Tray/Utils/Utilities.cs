@@ -1,4 +1,5 @@
-﻿using System.Runtime.InteropServices;
+﻿using System.Reflection;
+using System.Runtime.InteropServices;
 using LogiG733Tray.G733;
 using Serilog;
 
@@ -112,5 +113,16 @@ namespace LogiG733Tray.Utils
                    ?? "N/A";
         }
 
+        public static string ReadEmbeddedResource(string logicalName)
+        {
+            var asm = Assembly.GetExecutingAssembly();
+
+            using var stream = asm.GetManifestResourceStream(logicalName)
+                               ?? throw new InvalidOperationException(
+                                   $"Embedded resource '{logicalName}' not found.");
+
+            using var reader = new StreamReader(stream);
+            return reader.ReadToEnd();
+        }
     }
 }

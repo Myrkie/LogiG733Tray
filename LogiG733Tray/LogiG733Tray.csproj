@@ -38,4 +38,10 @@
       <PackageReference Include="PublishAotCompressed" Version="1.0.5" />
     </ItemGroup>
 
+    <ItemGroup>
+        <EmbeddedResource Include="API\Embedded\Pages\404\unauthorized.html" LogicalName="Pages.Unauthorized.html"/>
+        <EmbeddedResource Include="API\Embedded\Pages\404\unauthorized.css" LogicalName="Pages.Unauthorized.css"/>
+        <EmbeddedResource Include="API\Embedded\Pages\404\unauthorized.js" LogicalName="Pages.Unauthorized.js"/>
+    </ItemGroup>
+
 </Project>

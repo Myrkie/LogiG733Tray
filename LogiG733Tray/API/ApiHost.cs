@@ -30,9 +30,21 @@ namespace LogiG733Tray.API
 
             app.Use(async (ctx, next) =>
             {
-                if (ctx.Request.Headers["X-Api-Key"] != ApiKeyGenerator.GetApiKey() || ctx.Request.Headers.UserAgent != "LogiTrayControl")
+                var apiKeyValid = ctx.Request.Headers["X-Api-Key"] == ApiKeyGenerator.GetApiKey();
+                var userAgentValid = ctx.Request.Headers.UserAgent == "LogiTrayControl";
+
+                if (!apiKeyValid || !userAgentValid)
                 {
-                    ctx.Response.StatusCode = 401;
+                    ctx.Response.StatusCode = StatusCodes.Status401Unauthorized;
+                    ctx.Response.ContentType = "text/html; charset=utf-8";
+
+                    var html = Utilities.ReadEmbeddedResource("Pages.Unauthorized.html");
+                    var css  = Utilities.ReadEmbeddedResource("Pages.Unauthorized.css");
+                    var js   = Utilities.ReadEmbeddedResource("Pages.Unauthorized.js");
+                    html = html.Replace("{{CSS}}", css).Replace("{{CSS}}", js);
+
+                    await ctx.Response.WriteAsync(html);
+
                     return;
                 }
 
