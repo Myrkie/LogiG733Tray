@@ -41,7 +41,7 @@ namespace LogiG733Tray.API
                     var html = Utilities.ReadEmbeddedResource("Pages.Unauthorized.html");
                     var css  = Utilities.ReadEmbeddedResource("Pages.Unauthorized.css");
                     var js   = Utilities.ReadEmbeddedResource("Pages.Unauthorized.js");
-                    html = html.Replace("{{CSS}}", css).Replace("{{CSS}}", js);
+                    html = html.Replace("{{CSS}}", css).Replace("{{JS}}", js);
 
                     await ctx.Response.WriteAsync(html);
 

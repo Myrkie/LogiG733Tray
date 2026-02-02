@@ -99,7 +99,6 @@ namespace LogiG733Tray.Utils
             return CreateIconFromBitmap(bmp);
         }
         
-        
         internal static string GetLocalIp()
         {
             return System.Net.NetworkInformation.NetworkInterface
