@@ -10,6 +10,7 @@
         <!-- Shut up the compiler -->
         <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
         <_SuppressWinFormsTrimError>true</_SuppressWinFormsTrimError>
+        <PublishTrimmed>true</PublishTrimmed>
         <Authors>Myrkur</Authors>
         <Version>1.2.0</Version>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
