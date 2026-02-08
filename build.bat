@@ -85,7 +85,8 @@ dotnet publish "%ROOT%LogiG733Tray\LogiG733Tray.csproj" ^
  -c %CONFIG% ^
  -r win-x64 ^
  --self-contained true ^
- -o "%BUILDS%\Windows"
+ -o "%BUILDS%\Windows" ^
+ /bl:"%BUILDS%\Windows\LogiG733Tray.binlog"
 
 if errorlevel 1 goto :error
 

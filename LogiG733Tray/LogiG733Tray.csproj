@@ -15,6 +15,7 @@
         <Version>1.2.0</Version>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
         <EnableRuntimeMarshalling>true</EnableRuntimeMarshalling>
+        <PublishIISAssets>false</PublishIISAssets>
     </PropertyGroup>
 
     <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
@@ -38,6 +39,11 @@
       <PackageReference Include="Serilog.Sinks.File" Version="7.0.0" />
       <PackageReference Include="PublishAotCompressed" Version="1.0.5" />
     </ItemGroup>
+
+    <Target Name="DeleteANCIPAfterPublish" AfterTargets="Publish">
+        <Message Text="Deleting $(PublishDir)aspnetcorev2_inprocess.dll" Importance="normal" />
+        <Delete Files="$(PublishDir)aspnetcorev2_inprocess.dll" ContinueOnError="true" />
+    </Target>
 
     <ItemGroup>
         <EmbeddedResource Include="API\Embedded\Pages\404\unauthorized.html" LogicalName="Pages.Unauthorized.html"/>
