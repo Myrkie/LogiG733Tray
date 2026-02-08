@@ -62,9 +62,7 @@ namespace LogiG733Tray
             var connectReceiverItem = new ToolStripMenuItem(
                 "Connect to receiver",
                 null,
-#pragma warning disable IL3050
                 (_, _) => { AttachDevice(G733Device.TryConnectReceiver(out var device) ? device : null); });
-#pragma warning restore IL3050
 
             contextMenu.Items.Add(colorPickerItem);
             contextMenu.Items.Add(connectReceiverItem);
@@ -79,9 +77,7 @@ namespace LogiG733Tray
                 Text = "LogiTray Battery Monitor"
             };
 
-#pragma warning disable IL3050
             AttachDevice(G733Device.GetDevice());
-#pragma warning restore IL3050
 
             Application.Run();
             return;

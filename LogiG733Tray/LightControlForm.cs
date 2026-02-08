@@ -26,6 +26,7 @@ namespace LogiG733Tray
         private Panel? _offlineOverlay;
         private Label? _lblApiKey;
         private Label? _lblLocalIp;
+        private ToolTip? _toolTip;
         
         private readonly G733BatteryMonitor? _batteryMonitor;
         private readonly bool _apiEnabled;
@@ -60,10 +61,16 @@ namespace LogiG733Tray
             MaximizeBox = false;
             BackColor = UiUtilities.Bg;
 
+            _toolTip = new ToolTip
+            {
+                ShowAlways = false,
+                AutoPopDelay = 500,
+            };
+            
             _label = new Label
             {
                 Text = $"Device: {_g733?.Name}",
-                Font = new Font("Segoe UI", 11, FontStyle.Bold),
+                Font = UiUtilities.SegoeUi12Bold,
                 ForeColor = UiUtilities.Accent,
                 Dock = DockStyle.Fill,
                 TextAlign = ContentAlignment.MiddleCenter
@@ -202,7 +209,7 @@ namespace LogiG733Tray
             {
                 Text = "API KEY",
                 ForeColor = UiUtilities.Muted,
-                Font = new Font("Segoe UI", 8, FontStyle.Bold),
+                Font = UiUtilities.SegoeUi8Bold,
                 Dock = DockStyle.Fill
             };
 
@@ -210,7 +217,7 @@ namespace LogiG733Tray
             {
                 Text = "<- CLICK TO COPY ->",
                 ForeColor = UiUtilities.Muted,
-                Font = new Font("Segoe UI", 7),
+                Font = UiUtilities.SegoeUi7Standard,
                 AutoSize = true,
                 Anchor = AnchorStyles.None
             };
@@ -219,7 +226,7 @@ namespace LogiG733Tray
             {
                 Text = "LOCAL IP",
                 ForeColor = UiUtilities.Muted,
-                Font = new Font("Segoe UI", 8, FontStyle.Bold),
+                Font = UiUtilities.SegoeUi8Bold,
                 Dock = DockStyle.Fill,
                 TextAlign = ContentAlignment.MiddleRight
             };
@@ -228,7 +235,7 @@ namespace LogiG733Tray
             {
                 Text = ApiKeyGenerator.GetApiKey(),
                 ForeColor = UiUtilities.Text,
-                Font = new Font("Consolas", 8),
+                Font = UiUtilities.Consolas8Standard,
                 AutoSize = true,
                 MaximumSize = new Size(240, 0),
                 Cursor = Cursors.Hand,
@@ -239,7 +246,7 @@ namespace LogiG733Tray
             {
                 Text = $"{Utilities.GetLocalIp()}:{Config.Instance.Port}",
                 ForeColor = UiUtilities.Text,
-                Font = new Font("Consolas", 8),
+                Font = UiUtilities.Consolas8Standard,
                 AutoSize = true,
                 Cursor = Cursors.Hand,
                 Dock = DockStyle.Fill,
@@ -277,17 +284,7 @@ namespace LogiG733Tray
 
         private void ShowCopiedHint(Control target)
         {
-            var originalColor = target.ForeColor;
-            target.ForeColor = Color.LimeGreen;
-
-            var timer = new System.Windows.Forms.Timer { Interval = 800 };
-            timer.Tick += (_, _) =>
-            {
-                target.ForeColor = originalColor;
-                timer.Stop();
-                timer.Dispose();
-            };
-            timer.Start();
+            _toolTip?.Show("Copied!", target, 0, -20);
         }
 
         private void UpdateBatteryUi(BatteryInfo? battery)
@@ -331,8 +328,7 @@ namespace LogiG733Tray
 
         private void SetLight(G733HidClient.LightTarget target, G733HidClient.LightMode mode)
         {
-            var initialColor = new G733HidClient.RgbColor(255, 0, 0); // fallback initial color
-            var picker = new ColorAndModePickerForm(initialColor, mode);
+            var picker = new ColorAndModePickerForm(mode);
             if (picker.ShowDialog() != DialogResult.OK) return;
 
             var rgb = picker.SelectedColor;
@@ -352,8 +348,7 @@ namespace LogiG733Tray
 
         private void SetBothLights()
         {
-            var initialColor = new G733HidClient.RgbColor(255, 0, 0);
-            var picker = new ColorAndModePickerForm(initialColor, G733HidClient.LightMode.Static);
+            var picker = new ColorAndModePickerForm(G733HidClient.LightMode.Static);
             if (picker.ShowDialog() != DialogResult.OK) return;
 
             var rgb = picker.SelectedColor;
@@ -404,7 +399,7 @@ namespace LogiG733Tray
             var icon = new Label
             {
                 Text = "⚠",
-                Font = new Font("Segoe UI Emoji", 32),
+                Font = UiUtilities.SegoeUi32Emoji,
                 ForeColor = Color.Orange,
                 Dock = DockStyle.Top,
                 Height = 55,
@@ -414,7 +409,7 @@ namespace LogiG733Tray
             var title = new Label
             {
                 Text = "Receiver connected",
-                Font = new Font("Segoe UI", 12, FontStyle.Bold),
+                Font = UiUtilities.SegoeUi12Bold,
                 ForeColor = Color.White,
                 Dock = DockStyle.Top,
                 Height = 30,
@@ -424,7 +419,7 @@ namespace LogiG733Tray
             var subtitle = new Label
             {
                 Text = "Headset is Asleep.",
-                Font = new Font("Segoe UI", 9),
+                Font = UiUtilities.SegoeUi9Standard,
                 ForeColor = Color.Gainsboro,
                 Dock = DockStyle.Fill,
                 TextAlign = ContentAlignment.TopCenter,

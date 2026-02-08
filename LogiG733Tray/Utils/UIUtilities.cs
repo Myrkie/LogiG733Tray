@@ -7,6 +7,14 @@
         internal static readonly Color Accent = Color.FromArgb(0, 183, 194);
         internal static readonly Color Text = Color.White;
         internal static readonly Color Muted = Color.Gainsboro;
+        
+        internal static readonly Font SegoeUi7Standard = new("Segoe UI", 7);
+        internal static readonly Font SegoeUi8Bold = new("Segoe UI", 8, FontStyle.Bold);
+        internal static readonly Font Consolas8Standard = new("Consolas", 8);
+        internal static readonly Font SegoeUi9Standard = new("Segoe UI", 9);
+        internal static readonly Font SegoeUi12Bold = new("Segoe UI", 12, FontStyle.Bold);
+        internal static readonly Font SegoeUi32Emoji = new("Segoe UI Emoji", 32);
+
 
         internal static Button StyledButton(string text)
         {
@@ -28,7 +36,7 @@
                 BorderStyle = BorderStyle.None,
                 BackColor = Bg,
                 ForeColor = Text,
-                Font = new Font("Segoe UI", 9F),
+                Font = SegoeUi9Standard,
                 Dock = DockStyle.Fill,
                 PlaceholderText = placeholder
             };

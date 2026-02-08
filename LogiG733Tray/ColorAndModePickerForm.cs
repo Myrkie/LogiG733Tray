@@ -5,7 +5,7 @@ namespace LogiG733Tray
 {
     public class ColorAndModePickerForm : Form
     {
-        public G733HidClient.RgbColor SelectedColor { get; private set; }
+        public G733HidClient.RgbColor SelectedColor { get; private set; } = G733HidClient.Colors.Purple;
         public G733HidClient.LightMode SelectedMode { get; private set; }
 
         private ComboBox? _comboMode;
@@ -15,9 +15,8 @@ namespace LogiG733Tray
         private Button? _btnCancel;
         private ColorDialog? _colorDialog;
 
-        public ColorAndModePickerForm(G733HidClient.RgbColor initialColor, G733HidClient.LightMode initialMode)
+        public ColorAndModePickerForm(G733HidClient.LightMode initialMode)
         {
-            SelectedColor = initialColor;
             SelectedMode = initialMode;
 
             InitializeComponents();
@@ -66,7 +65,7 @@ namespace LogiG733Tray
                 Dock = DockStyle.Fill,
                 BackColor = UiUtilities.Bg,
                 ForeColor = UiUtilities.Text,
-                Font = new Font("Segoe UI", 9F, FontStyle.Regular),
+                Font = UiUtilities.SegoeUi9Standard,
                 FlatStyle = FlatStyle.Flat
             };
             
@@ -88,6 +87,7 @@ namespace LogiG733Tray
                 BorderStyle = BorderStyle.FixedSingle,
                 Dock = DockStyle.Fill
             };
+            
             layout.Controls.Add(_colorPreview, 1, 1);
 
             _btnOk = UiUtilities.StyledButton("OK");
