@@ -44,15 +44,15 @@ namespace LogiG733Tray.G733
                    Enumerable.Contains(SupportedProductIDs, device.ProductID);
         }
 
-        private static bool TryCreate(HidDevice device, out G733Device? g733)
+        private static bool TryCreate(HidDevice hidDevice, out G733Device? g733)
         {
-            if (!IsSupported(device))
+            if (!IsSupported(hidDevice))
             {
                 g733 = null;
                 return false;
             }
-
-            g733 = new G733Device(device);
+            
+            g733 = new G733Device(hidDevice);
             return true;
         }
         
@@ -68,25 +68,26 @@ namespace LogiG733Tray.G733
                 _cachedDevice = null;
             }
 
-            foreach (var device in DeviceList.Local.GetHidDevices())
+            foreach (var hidDevice in DeviceList.Local.GetHidDevices())
             {
-                if (!TryCreate(device, out var g733)) continue;
+                if (!TryCreate(hidDevice, out var g733)) continue;
 
                 var battery = g733!.GetBatteryInfo();
 
                 if (battery.Status == BatteryStatus.Unavailable) 
                     continue;
-
+                
                 _cachedDevice = g733;
+                Logger.Debug("GetDevice: Found receiver: {HidReceiverName} at path {HidDevicePath}", hidDevice.GetFriendlyName(),hidDevice.DevicePath);
                 return _cachedDevice;
             }
 
             return null;
         }
 
-        public static bool TryConnectReceiver(out G733Device? device)
+        public static bool TryConnectReceiver(out G733Device? hidDevice)
         {
-            device = null;
+            hidDevice = null;
 
             foreach (var hid in DeviceList.Local.GetHidDevices())
             {
@@ -103,7 +104,8 @@ namespace LogiG733Tray.G733
                 _cachedDevice = g733;
                 g733.UpdateConnectionState();
 
-                device = g733;
+                hidDevice = g733;
+                Logger.Debug("TryConnectReceiver: Found receiver: {HidReceiverName} at path {HidDevicePath}", hid.GetFriendlyName(),hid.DevicePath);
                 return true;
             }
 
