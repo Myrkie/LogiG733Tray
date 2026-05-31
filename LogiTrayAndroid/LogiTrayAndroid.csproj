@@ -6,7 +6,7 @@
         <Nullable>enable</Nullable>
         <ImplicitUsings>enable</ImplicitUsings>
         <ApplicationId>com.Myrkur.LogiTrayAndroidCompanion</ApplicationId>
-        <ApplicationVersion>1.2.1</ApplicationVersion>
+        <ApplicationVersion>121</ApplicationVersion>
         <ApplicationDisplayVersion>1.2.1</ApplicationDisplayVersion>
         <!--
           Enables trim analyzers and full trimming during Release mode.
