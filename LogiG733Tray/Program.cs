@@ -2,6 +2,7 @@
 using LogiG733Tray.API;
 using LogiG733Tray.G733;
 using LogiG733Tray.Utils;
+using LogiG733Tray.Win;
 using Serilog;
 using Serilog.Sinks.SystemConsole.Themes;
 
@@ -24,8 +25,13 @@ namespace LogiG733Tray
         [STAThread]
         private static void Main()
         {
+            var levelSwitch = new Serilog.Core.LoggingLevelSwitch
+            {
+                MinimumLevel = Config.Instance.DebugMode ? Serilog.Events.LogEventLevel.Debug : Serilog.Events.LogEventLevel.Information
+            };
+
             Log.Logger = new LoggerConfiguration()
-                .MinimumLevel.Verbose()
+                .MinimumLevel.ControlledBy(levelSwitch)
                 .WriteTo.Console(
                     outputTemplate:
                     "[{Timestamp:HH:mm:ss} {Level:u3}] [{SourceContext}] {Message:lj}{NewLine}{Exception}",

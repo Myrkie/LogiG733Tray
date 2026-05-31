@@ -3,7 +3,7 @@ using LogiG733Tray.G733;
 using LogiG733Tray.Utils;
 using Serilog;
 
-namespace LogiG733Tray
+namespace LogiG733Tray.Win
 {
     public class LightControlForm : Form
     {

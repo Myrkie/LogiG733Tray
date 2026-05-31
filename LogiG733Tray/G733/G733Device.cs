@@ -1,5 +1,6 @@
 ﻿using HidSharp;
 using LogiG733Tray.Utils;
+using LogiG733Tray.Win;
 using Serilog;
 
 namespace LogiG733Tray.G733
@@ -13,16 +14,35 @@ namespace LogiG733Tray.G733
         private static readonly int[] SupportedProductIDs = [0x0afe, 0x0ab5, 0x0b1f, 0x0a5b];
         private static G733Device? _cachedDevice;
         private readonly G733HidClient _hid;
+        private readonly WinMediaControl? _media;
+        
         public DeviceConnectionState ConnectionState { get; private set; } = DeviceConnectionState.NoReceiver;
         public event Action<DeviceConnectionState>? ConnectionStateChanged;
-
         public string Name { get; }
 
         private G733Device(HidDevice? device)
         {
             _hid = new G733HidClient(device!);
             _hid.OnlineStateChanged += _ => UpdateConnectionState();
+            
+            _hid.PowerButtonPressed += OnPowerButtonPressed;
+            _hid.StartListening();
+            
+            if (Config.Instance.PwrPausesMedia)
+            {
+                _media = new WinMediaControl();
+                _ = _media.InitializeAsync();
+            }
+            
             Name = device!.GetProductName(GetStringFlags.None);
+        }
+        
+        private void OnPowerButtonPressed()
+        {
+            if (_media != null)
+            {
+                _ = _media.TogglePlayPauseAsync();
+            }
         }
         
         private void SetConnectionState(DeviceConnectionState newState)

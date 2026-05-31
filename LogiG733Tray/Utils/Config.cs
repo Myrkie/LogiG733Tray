@@ -25,6 +25,8 @@ namespace LogiG733Tray.Utils
         public static Config Instance { get; } = LoadConfig();
         
         public bool InitializeApi { get; set; }
+        public bool PwrPausesMedia { get; set; }
+        public bool DebugMode { get; set; }
         public OnConnectConfig OnConnectConfig { get; set; } = new();
         public int Port { get; set; } = 5180;
 

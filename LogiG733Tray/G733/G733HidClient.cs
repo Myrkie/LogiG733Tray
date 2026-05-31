@@ -12,6 +12,58 @@ namespace LogiG733Tray.G733
 
         public event Action<bool>? OnlineStateChanged;
 
+        public event Action? PowerButtonPressed;
+
+        private CancellationTokenSource? _hidCts;
+        private Task? _hidTask;
+
+        public void StartListening()
+        {
+            if (_hidTask is { IsCompleted: false })
+                return;
+
+            _hidCts = new CancellationTokenSource();
+
+            _hidTask = Task.Run(() =>
+            {
+                try
+                {
+                    using var stream = device.Open();
+                    byte[] buffer = new byte[64];
+
+                    Logger.Information("Started HID listener");
+
+                    while (!_hidCts.IsCancellationRequested)
+                    {
+                        try
+                        {
+                            int read = stream.Read(buffer, 0, buffer.Length);
+
+                            if (read > 0)
+                                HandleHidReport(buffer, read);
+                        }
+                        catch (TimeoutException)
+                        {
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Logger.Error(ex, "HID listener crashed");
+                }
+            });
+        }
+
+        private void HandleHidReport(byte[] data, int length)
+        {
+            Logger.Debug("HID IN: {Data}", Convert.ToHexString(data, 0, length));
+
+            if (length < 6) return;
+            if (data[2] != 0x05 || data[4] != 0x02) return;
+            Logger.Information("Power button pressed");
+            PowerButtonPressed?.Invoke();
+        }
+
         private void SetOffline()
         {
             if (!IsOnline)

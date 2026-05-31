@@ -1,7 +1,7 @@
 ﻿using LogiG733Tray.G733;
 using LogiG733Tray.Utils;
 
-namespace LogiG733Tray
+namespace LogiG733Tray.Win
 {
     public class ColorAndModePickerForm : Form
     {

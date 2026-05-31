@@ -68,10 +68,7 @@ namespace LogiTrayAndroid.Services
             }
 
             var json = await response.Content.ReadAsStringAsync();
-            if (int.TryParse(json, out int minutes))
-                return minutes;
-
-            throw new FormatException($"GetAutoPowerOff returned invalid data: {json}");
+            return int.TryParse(json, out int minutes) ? minutes : throw new FormatException($"GetAutoPowerOff returned invalid data: {json}");
         }
 
         public async Task SetAutoPowerOffAsync(int minutes)
