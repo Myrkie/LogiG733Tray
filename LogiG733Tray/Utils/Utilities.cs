@@ -143,7 +143,7 @@ namespace LogiG733Tray.Utils
                 .Replace("{{JS}}", js);
         }
 
-        public static string ReadEmbeddedResource(string logicalName)
+        private static string ReadEmbeddedResource(string logicalName)
         {
             var asm = Assembly.GetExecutingAssembly();
 

@@ -17,7 +17,7 @@ namespace LogiG733Tray
         private static LightControlForm? _lightControlForm;
         private static G733Device? _g733;
         private static G733BatteryMonitor? _batteryMonitor;
-
+        private static ApiHost? _apiHost;
         public static NotifyIcon NotifyIcon() => _notifyIcon;
 
         private static readonly bool ApiEnabled = Config.Instance.ApiConfig.InitializeApi;
@@ -87,6 +87,7 @@ namespace LogiG733Tray
 
             Application.Run();
             return;
+            
             void AttachDevice(G733Device? newDevice)
             {
                 if (_batteryMonitor != null)
@@ -114,9 +115,13 @@ namespace LogiG733Tray
 
                 if (ApiEnabled)
                 {
-                    var apiHost = new ApiHost(_g733, _batteryMonitor);
-                
-                    apiHost.Start();
+                    if (_apiHost != null)
+                    {
+                        _apiHost.Dispose();
+                        _apiHost = null;
+                    }
+                    _apiHost = new ApiHost(_g733, _batteryMonitor);
+                    _apiHost.Start();
                 }
 
                 _g733.ConnectionStateChanged += OnConnectionStateChanged;

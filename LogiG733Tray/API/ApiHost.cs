@@ -9,8 +9,16 @@ using Serilog;
 
 namespace LogiG733Tray.API
 {
-    public class ApiHost(G733Device device, G733BatteryMonitor batteryMonitor)
+    public class ApiHost(G733Device device, G733BatteryMonitor batteryMonitor) : IDisposable
     {
+        private WebApplication? _app;
+        
+        public void Dispose()
+        {
+            if (_app == null) return;
+            _app.DisposeAsync().AsTask().GetAwaiter().GetResult();
+            _app = null;
+        }
         public void Start()
         {
             var builder = WebApplication.CreateBuilder();
@@ -26,9 +34,9 @@ namespace LogiG733Tray.API
             builder.WebHost.UseUrls($"http://{localip}:{localport}");
             builder.Host.UseSerilog();
             
-            var app = builder.Build();
+            _app = builder.Build();
 
-            app.Use(async (ctx, next) =>
+            _app.Use(async (ctx, next) =>
             {
                 var apiKeyValid = ctx.Request.Headers["X-Api-Key"] == ApiKeyGenerator.GetApiKey();
                 var userAgentValid = ctx.Request.Headers.UserAgent == "LogiTrayControl";
@@ -48,13 +56,13 @@ namespace LogiG733Tray.API
                 await next();
             });
             
-            app.MapGet("/status", () =>
+            _app.MapGet("/status", () =>
             {
                 var status = new StatusResponse(device.Name, device.ConnectionState, batteryMonitor.LatestBattery);
                 return Results.Ok(status);
             });
             
-            app.MapGet("/powerofftime", () =>
+            _app.MapGet("/powerofftime", () =>
             {
                 switch (device.ConnectionState)
                 {
@@ -72,13 +80,13 @@ namespace LogiG733Tray.API
                 }
             });
             
-            app.MapPost("/powerofftime", (PowerOffRequest req) =>
+            _app.MapPost("/powerofftime", (PowerOffRequest req) =>
             {
                 device.SetAutoPowerOff(req.Minutes);
                 return Results.Ok();
             });
 
-            app.MapPost("/lights", (LightRequest req) =>
+            _app.MapPost("/lights", (LightRequest req) =>
             {
                 var mode = req.Mode ?? G733HidClient.LightMode.Static;
                 
@@ -104,13 +112,13 @@ namespace LogiG733Tray.API
 
                 return Results.Ok();
             });
-            app.MapPost("/lights/off", () =>
+            _app.MapPost("/lights/off", () =>
             {
                 device.DisableLights();
                 return Results.Ok();
             });
 
-            app.RunAsync();
+            _app.RunAsync();
         }
     }
 }
