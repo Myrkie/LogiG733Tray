@@ -13,6 +13,7 @@ namespace LogiG733Tray.Utils
         private static Mutex _mutex = null!;
         private const int LowBatteryThreshold = 15;
         private const int CriticalBatteryThreshold = 5;
+        private static readonly Dictionary<(int level, BatteryStatus status), Icon> IconCache = new();
 
         [LibraryImport("user32.dll", SetLastError = true)]
         [return: MarshalAs(UnmanagedType.Bool)]
@@ -31,8 +32,14 @@ namespace LogiG733Tray.Utils
         
         internal static void SetNotifyIcon(Icon newIcon)
         {
-            var oldIcon = Program.NotifyIcon().Icon;
-            Program.NotifyIcon().Icon = newIcon;
+            var ni = Program.NotifyIcon();
+
+            if (ni.Icon != null && ReferenceEquals(ni.Icon, newIcon))
+                return;
+
+            var oldIcon = ni.Icon;
+            ni.Icon = newIcon;
+
             oldIcon?.Dispose();
         }
         
@@ -42,7 +49,7 @@ namespace LogiG733Tray.Utils
             try
             {
                 using var tempIcon = Icon.FromHandle(hIcon);
-                return (Icon)tempIcon.Clone(); 
+                return (Icon)tempIcon.Clone();
             }
             finally
             {
@@ -52,6 +59,13 @@ namespace LogiG733Tray.Utils
         
         internal static Icon CreateBatteryIcon(int level, BatteryStatus status)
         {
+            var key = (level, status);
+
+            if (IconCache.TryGetValue(key, out var cached))
+                return (Icon)cached.Clone();
+            
+            Logger.Debug("Icon Cache Missed, Creating battery icon for lv {lv} of state {stat}", level, status);
+            
             using var bmp = new Bitmap(16, 16);
             using (var g = Graphics.FromImage(bmp))
             {
@@ -96,7 +110,11 @@ namespace LogiG733Tray.Utils
                     g.DrawLine(warnPen, 8, 11, 8, 12);
                 }
             }
-            return CreateIconFromBitmap(bmp);
+
+            var icon = CreateIconFromBitmap(bmp);
+            IconCache[key] = (Icon)icon.Clone();
+
+            return icon;
         }
         
         internal static string GetLocalIp()
