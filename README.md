@@ -27,5 +27,3 @@ supported devices are defined by their ProductID within [G733Device.SupportedPro
 0x0ab5 // g733 variant
 
 0x0b1f // g733 variant
-
-0x0a5b // g933

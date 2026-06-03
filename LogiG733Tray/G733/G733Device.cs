@@ -12,7 +12,7 @@ namespace LogiG733Tray.G733
         private static readonly ILogger Logger = Log.ForContext<G733Device>();
         
         private const int VendorId = 0x046D; // Logi
-        private static readonly int[] SupportedProductIDs = [0x0afe, 0x0ab5, 0x0b1f, 0x0a5b];
+        private static readonly int[] SupportedProductIDs = [0x0afe, 0x0ab5, 0x0b1f];
         private static G733Device? _cachedDevice;
         private readonly G733HidClient _hid;
 
@@ -47,16 +47,10 @@ namespace LogiG733Tray.G733
             ConnectionStateChanged?.Invoke(newState);
         }
         
-        private static bool IsReceiverPresent()
-        {
-            return DeviceList.Local.GetHidDevices()
-                .Any(IsSupported);
-        }
-        
         private static bool IsSupported(HidDevice device)
         {
-            return device.VendorID == VendorId &&
-                   Enumerable.Contains(SupportedProductIDs, device.ProductID);
+            bool match = device.VendorID == VendorId && Enumerable.Contains(SupportedProductIDs, device.ProductID);
+            return match && device.DevicePath.Contains("col02", StringComparison.OrdinalIgnoreCase);
         }
 
         private static bool TryCreate(HidDevice hidDevice, out G733Device? g733)
@@ -74,27 +68,33 @@ namespace LogiG733Tray.G733
         public static G733Device? GetDevice()
         {
             if (_cachedDevice != null)
-            {
-                var battery = _cachedDevice.GetBatteryInfo();
-
-                if (battery.Status is not BatteryStatus.Unavailable and not BatteryStatus.Timeout)
-                    return _cachedDevice;
-
-                _cachedDevice = null;
-            }
-
-            foreach (var hidDevice in DeviceList.Local.GetHidDevices())
-            {
-                if (!TryCreate(hidDevice, out var g733)) continue;
-
-                var battery = g733!.GetBatteryInfo();
-
-                if (battery.Status == BatteryStatus.Unavailable) 
-                    continue;
-                
-                _cachedDevice = g733;
-                Logger.Debug("GetDevice: Found receiver: {HidReceiverName} at path {HidDevicePath}", hidDevice.GetFriendlyName(),hidDevice.DevicePath);
                 return _cachedDevice;
+
+            var devices = DeviceList.Local.GetHidDevices().ToList();
+
+            Logger.Debug("Found {Count} HID devices", devices.Count);
+
+            foreach (var d in devices)
+            {
+                Logger.Debug("HID: VID={VID:X4} PID={PID:X4} Path={Path}",
+                    d.VendorID,
+                    d.ProductID,
+                    d.DevicePath);
+
+                if (!IsSupported(d))
+                    continue;
+
+                if (!TryCreate(d, out var g733) || g733 is null)
+                    continue;
+
+                _cachedDevice = g733;
+
+                Logger.Debug("Selected device: VID={VID:X4} PID={PID:X4} Path={Path}",
+                    d.VendorID,
+                    d.ProductID,
+                    d.DevicePath);
+
+                return g733;
             }
 
             return null;
@@ -109,18 +109,14 @@ namespace LogiG733Tray.G733
                 if (!IsSupported(hid))
                     continue;
 
-                if (!TryCreate(hid, out var g733))
-                    continue;
-
-                var battery = g733!.GetBatteryInfo();
-                if (battery.Status == BatteryStatus.Unavailable)
+                if (!TryCreate(hid, out var g733) || g733 is null)
                     continue;
 
                 _cachedDevice = g733;
                 g733.UpdateConnectionState();
 
                 hidDevice = g733;
-                Logger.Debug("TryConnectReceiver: Found receiver: {HidReceiverName} at path {HidDevicePath}", hid.GetFriendlyName(),hid.DevicePath);
+                Logger.Debug("Selected device {Path}", hid.DevicePath);
                 return true;
             }
 
@@ -130,40 +126,34 @@ namespace LogiG733Tray.G733
         
         public void UpdateConnectionState()
         {
-            if (!IsReceiverPresent())
+            try
             {
-                SetConnectionState(DeviceConnectionState.NoReceiver);
-                return;
-            }
+                var battery = GetBatteryInfo();
 
-            var battery = GetBatteryInfo();
-
-            switch (battery.Status)
-            {
-                case BatteryStatus.Unavailable:
-                    SetConnectionState(DeviceConnectionState.ReceiverPresent);
-                    return;
-                case BatteryStatus.Timeout:
+                if (battery.Status == BatteryStatus.Timeout)
+                {
                     SetConnectionState(DeviceConnectionState.HeadsetSleeping);
                     return;
-                default:
-                    SetConnectionState(DeviceConnectionState.HeadsetOnline);
-                    if (Config.Instance.OnConnectConfig.SetOnConnectColor)
-                    {
-                        Logger.Debug("Setting OnConnectColor to: {UR}|{UG}|{UB}, {LR}|{LG}|{LB}, {OnConnectLightMode}", 
-                            Config.Instance.OnConnectConfig.OnConnectColorUpperColor.R, 
-                            Config.Instance.OnConnectConfig.OnConnectColorUpperColor.G, 
-                            Config.Instance.OnConnectConfig.OnConnectColorUpperColor.B, 
-                            Config.Instance.OnConnectConfig.OnConnectColorLowerColor.R, 
-                            Config.Instance.OnConnectConfig.OnConnectColorLowerColor.G, 
-                            Config.Instance.OnConnectConfig.OnConnectColorLowerColor.B, 
-                            Config.Instance.OnConnectConfig.OnConnectLightMode);
+                }
 
-                        SetLights(Config.Instance.OnConnectConfig.OnConnectColorUpperColor, 
-                            Config.Instance.OnConnectConfig.OnConnectColorLowerColor, 
-                            Config.Instance.OnConnectConfig.OnConnectLightMode);
-                    }
-                    break;
+                SetConnectionState(DeviceConnectionState.HeadsetOnline);
+                if (!Config.Instance.OnConnectConfig.SetOnConnectColor) return;
+                Logger.Debug("Setting OnConnectColor to: {UR}|{UG}|{UB}, {LR}|{LG}|{LB}, {OnConnectLightMode}", 
+                    Config.Instance.OnConnectConfig.OnConnectColorUpperColor.R, 
+                    Config.Instance.OnConnectConfig.OnConnectColorUpperColor.G, 
+                    Config.Instance.OnConnectConfig.OnConnectColorUpperColor.B, 
+                    Config.Instance.OnConnectConfig.OnConnectColorLowerColor.R, 
+                    Config.Instance.OnConnectConfig.OnConnectColorLowerColor.G, 
+                    Config.Instance.OnConnectConfig.OnConnectColorLowerColor.B, 
+                    Config.Instance.OnConnectConfig.OnConnectLightMode);
+
+                SetLights(Config.Instance.OnConnectConfig.OnConnectColorUpperColor, 
+                    Config.Instance.OnConnectConfig.OnConnectColorLowerColor, 
+                    Config.Instance.OnConnectConfig.OnConnectLightMode);
+            }
+            catch
+            {
+                SetConnectionState(DeviceConnectionState.ReceiverPresent);
             }
         }
         
@@ -232,14 +222,18 @@ namespace LogiG733Tray.G733
                 ushort voltage = (ushort)((response[4] << 8) | response[5]);
                 byte state = response[6];
 
-                return new BatteryInfo
-                {
-                    Status = state == 0x03
-                        ? BatteryStatus.Charging
-                        : BatteryStatus.Detected,
-                    Level = MapVoltageToPercent(voltage),
-                    VoltageMv = voltage
-                };
+                if (voltage != 0)
+                    return new BatteryInfo
+                    {
+                        Status = state == 0x03
+                            ? BatteryStatus.Charging
+                            : BatteryStatus.Detected,
+                        Level = MapVoltageToPercent(voltage),
+                        VoltageMv = voltage
+                    };
+                Logger.Warning("Discarded invalid battery reading: Voltage was 0.");
+                return new BatteryInfo { Status = BatteryStatus.Timeout };
+
             }
             catch
             {

@@ -47,9 +47,9 @@ namespace LogiG733Tray.G733
                         }
                     }
                 }
-                catch (Exception ex)
+                catch (IOException)
                 {
-                    Logger.Error(ex, "HID listener crashed");
+                    Logger.Error("Device has been lost");
                 }
             });
         }
