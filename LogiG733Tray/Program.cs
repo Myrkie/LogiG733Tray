@@ -20,7 +20,7 @@ namespace LogiG733Tray
 
         public static NotifyIcon NotifyIcon() => _notifyIcon;
 
-        private static readonly bool ApiEnabled = Config.Instance.InitializeApi;
+        private static readonly bool ApiEnabled = Config.Instance.ApiConfig.InitializeApi;
 
         [STAThread]
         private static void Main()

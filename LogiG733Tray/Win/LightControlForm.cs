@@ -244,7 +244,7 @@ namespace LogiG733Tray.Win
 
             _lblLocalIp = new Label
             {
-                Text = $"{Utilities.GetLocalIp()}:{Config.Instance.Port}",
+                Text = $"{Utilities.GetLocalIp()}:{Config.Instance.ApiConfig.Port}",
                 ForeColor = UiUtilities.Text,
                 Font = UiUtilities.Consolas8Standard,
                 AutoSize = true,

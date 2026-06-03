@@ -111,6 +111,19 @@ namespace LogiG733Tray.Utils
                        .Address.ToString()
                    ?? "N/A";
         }
+        
+        public static string BuildEmbeddedPage(string pageName)
+        {
+            string html = ReadEmbeddedResource($"Pages.{pageName}.html");
+
+            // ReSharper disable twice NullCoalescingConditionIsAlwaysNotNullAccordingToAPIContract
+            string css = ReadEmbeddedResource($"Pages.{pageName}.css") ?? "";
+            string js  = ReadEmbeddedResource($"Pages.{pageName}.js") ?? "";
+
+            return html
+                .Replace("{{CSS}}", css)
+                .Replace("{{JS}}", js);
+        }
 
         public static string ReadEmbeddedResource(string logicalName)
         {

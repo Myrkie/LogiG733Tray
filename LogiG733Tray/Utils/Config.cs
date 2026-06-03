@@ -4,8 +4,10 @@ using LogiG733Tray.G733;
 
 namespace LogiG733Tray.Utils
 {
-    [JsonSerializable(typeof(Config))]
     [JsonSerializable(typeof(OnConnectConfig))]
+    [JsonSerializable(typeof(PwrButtonConfig))]
+    [JsonSerializable(typeof(ApiConfig))]
+    [JsonSerializable(typeof(Config))]
     [JsonSourceGenerationOptions(GenerationMode = JsonSourceGenerationMode.Default, WriteIndented = true, AllowTrailingCommas = true)]
     internal partial class ConfigSourceGenerationContext : JsonSerializerContext;
     
@@ -17,18 +19,29 @@ namespace LogiG733Tray.Utils
         public G733HidClient.RgbColor OnConnectColorLowerColor { get; set; } = new(0,0,0);
         public G733HidClient.LightMode OnConnectLightMode { get; set; } = G733HidClient.LightMode.Off;
     }
-    
+
+    [Serializable]
+    public class PwrButtonConfig
+    {
+        public bool PwrPausesMedia { get; set; }
+        public int DoubleClickDelayMs { get; set; } = 2000;
+    }
+
+    [Serializable]
+    public class ApiConfig
+    {
+        public bool InitializeApi { get; set; }
+        public int Port { get; set; } = 5180;
+    }
     [Serializable]
     public class Config
     {
         private static readonly string ConfigPath = Path.Combine(AppContext.BaseDirectory, "Config" ,"config.json");
         public static Config Instance { get; } = LoadConfig();
-        
-        public bool InitializeApi { get; set; }
-        public bool PwrPausesMedia { get; set; }
         public bool DebugMode { get; set; }
         public OnConnectConfig OnConnectConfig { get; set; } = new();
-        public int Port { get; set; } = 5180;
+        public PwrButtonConfig PwrButtonConfig { get; set; } = new();
+        public ApiConfig ApiConfig { get; set; } = new();
 
         static Config LoadConfig()
         {

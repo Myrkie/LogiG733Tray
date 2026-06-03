@@ -21,7 +21,7 @@ namespace LogiG733Tray.API
             });
 
             var localip = Utilities.GetLocalIp();
-            var localport = Config.Instance.Port;
+            var localport = Config.Instance.ApiConfig.Port;
 
             builder.WebHost.UseUrls($"http://{localip}:{localport}");
             builder.Host.UseSerilog();
@@ -38,10 +38,7 @@ namespace LogiG733Tray.API
                     ctx.Response.StatusCode = StatusCodes.Status401Unauthorized;
                     ctx.Response.ContentType = "text/html; charset=utf-8";
 
-                    var html = Utilities.ReadEmbeddedResource("Pages.Unauthorized.html");
-                    var css  = Utilities.ReadEmbeddedResource("Pages.Unauthorized.css");
-                    var js   = Utilities.ReadEmbeddedResource("Pages.Unauthorized.js");
-                    html = html.Replace("{{CSS}}", css).Replace("{{JS}}", js);
+                    string html = Utilities.BuildEmbeddedPage("Unauthorized");
 
                     await ctx.Response.WriteAsync(html);
 

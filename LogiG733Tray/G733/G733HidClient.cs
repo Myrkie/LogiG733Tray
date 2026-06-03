@@ -56,11 +56,9 @@ namespace LogiG733Tray.G733
 
         private void HandleHidReport(byte[] data, int length)
         {
-            Logger.Debug("HID IN: {Data}", Convert.ToHexString(data, 0, length));
-
             if (length < 6) return;
             if (data[2] != 0x05 || data[4] != 0x02) return;
-            Logger.Information("Power button pressed");
+            Logger.Debug("Power button pressed");
             PowerButtonPressed?.Invoke();
         }
 
