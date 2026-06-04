@@ -6,16 +6,14 @@ namespace LogiG733Tray.G733
 {
     public sealed class G733HidClient(HidDevice device)
     {
+        private const int HidppLongMessageLength = 20;
         private static readonly ILogger Logger = Log.ForContext<G733HidClient>();
-
         private bool IsOnline { get; set; } = true;
-
-        public event Action<bool>? OnlineStateChanged;
-
-        public event Action? PowerButtonPressed;
-
         private CancellationTokenSource? _hidCts;
         private Task? _hidTask;
+        
+        public event Action<bool>? OnlineStateChanged;
+        public event Action? PowerButtonPressed;
 
         public void StartListening()
         {
@@ -24,20 +22,28 @@ namespace LogiG733Tray.G733
 
             _hidCts = new CancellationTokenSource();
 
-            _hidTask = Task.Run(() =>
+            _hidTask = Task.Run(() => ListenLoop(_hidCts.Token));
+        }
+        
+        private async Task ListenLoop(CancellationToken token)
+        {
+            Logger.Information("HID listener started");
+
+            while (!token.IsCancellationRequested)
             {
                 try
                 {
-                    using var stream = device.Open();
+                    await using var stream = device.Open();
+
                     byte[] buffer = new byte[64];
 
-                    Logger.Information("Started HID listener");
+                    Logger.Information("HID device connected");
 
-                    while (!_hidCts.IsCancellationRequested)
+                    while (!token.IsCancellationRequested)
                     {
                         try
                         {
-                            int read = stream.Read(buffer, 0, buffer.Length);
+                            int read = await stream.ReadAsync(buffer, token);
 
                             if (read > 0)
                                 HandleHidReport(buffer, read);
@@ -47,11 +53,29 @@ namespace LogiG733Tray.G733
                         }
                     }
                 }
-                catch (IOException)
+                catch (IOException ex)
                 {
-                    Logger.Error("Device has been lost");
+                    Logger.Warning("Device disconnected: {Message}", ex.Message);
                 }
-            });
+                catch (Exception ex)
+                {
+                    Logger.Error(ex, "Unexpected HID listener error");
+                }
+                if (token.IsCancellationRequested) break;
+
+                Logger.Information("Attempting reconnect in 4 seconds");
+
+                try
+                {
+                    await Task.Delay(TimeSpan.FromSeconds(4), token);
+                }
+                catch (OperationCanceledException)
+                {
+                    break;
+                }
+            }
+
+            Logger.Information("HID listener stopped");
         }
 
         private void HandleHidReport(byte[] data, int length)
@@ -94,7 +118,6 @@ namespace LogiG733Tray.G733
             return true;
         }
         
-        private const int HidppLongMessageLength = 20;
 
         public enum LightTarget : byte
         {
