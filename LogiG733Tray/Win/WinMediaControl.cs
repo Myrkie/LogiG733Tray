@@ -1,8 +1,9 @@
-﻿using Windows.Media.Control;
+﻿using System.Text.RegularExpressions;
+using Windows.Media.Control;
 
 namespace LogiG733Tray.Win
 {
-    public class WinMediaControl
+    public partial class WinMediaControl
     {
         private GlobalSystemMediaTransportControlsSessionManager? _manager;
         private GlobalSystemMediaTransportControlsSession? _selectedSession;
@@ -78,6 +79,48 @@ namespace LogiG733Tray.Win
             }
         }
         
+        public Task<string?> SelectPreviousSession()
+        {
+            try
+            {
+                if (_manager == null)
+                    return Task.FromResult<string?>(null);
+
+                var sessions = _manager.GetSessions();
+
+                if (sessions.Count == 0)
+                    return Task.FromResult<string?>(null);
+
+                var current = GetFocusedSession();
+
+                if (current == null)
+                {
+                    _selectedSession = sessions[^1];
+                    return GetSessionNameAsync(_selectedSession);
+                }
+
+                int currentIndex = sessions
+                    .Select((session, index) => new { session, index })
+                    .FirstOrDefault(x => ReferenceEquals(x.session, current))
+                    ?.index ?? -1;
+
+                if (currentIndex < 0)
+                {
+                    _selectedSession = sessions[^1];
+                    return GetSessionNameAsync(_selectedSession);
+                }
+
+                int previousIndex = (currentIndex - 1 + sessions.Count) % sessions.Count;
+                _selectedSession = sessions[previousIndex];
+
+                return GetSessionNameAsync(_selectedSession);
+            }
+            catch (Exception ex)
+            {
+                return Task.FromException<string?>(ex);
+            }
+        }
+        
         private async Task<string?> GetSessionNameAsync(GlobalSystemMediaTransportControlsSession? session)
         {
             if (session == null)
@@ -85,6 +128,26 @@ namespace LogiG733Tray.Win
 
             var props = await session.TryGetMediaPropertiesAsync();
             return props?.Title;
+        }
+        
+        public Task<string> GetCurrentSessionNameAsync()
+        {
+            var session = GetFocusedSession();
+            if (session == null)
+                return Task.FromResult<string?>(null);
+
+            var appId = session.SourceAppUserModelId;
+
+            if (string.IsNullOrWhiteSpace(appId))
+                return Task.FromResult<string?>(null);
+
+            var exeMatch = AppNameRegex().Match(appId);
+            if (exeMatch.Success)
+                return Task.FromResult(exeMatch.Groups[1].Value);
+
+            var cleaned = appId.Split('!').LastOrDefault();
+
+            return Task.FromResult(!string.IsNullOrWhiteSpace(cleaned) ? cleaned : appId);
         }
         
         public async Task<string?> GetCurrentMediaNameAsync()
@@ -96,5 +159,8 @@ namespace LogiG733Tray.Win
             var props = await session.TryGetMediaPropertiesAsync();
             return props?.Title;
         }
+
+        [GeneratedRegex(@"([^\\/:*?""<>|]+)\.exe", RegexOptions.IgnoreCase, "en-US")]
+        private static partial Regex AppNameRegex();
     }
 }

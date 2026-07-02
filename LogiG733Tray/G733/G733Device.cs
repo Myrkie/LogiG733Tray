@@ -20,17 +20,14 @@ namespace LogiG733Tray.G733
         public event Action<DeviceConnectionState>? ConnectionStateChanged;
         public string Name { get; }
 
-        private G733Device(HidDevice? device)
+        private G733Device(HidDevice? device, WinMediaControl? media)
         {
             _hid = new G733HidClient(device!);
             _hid.OnlineStateChanged += _ => UpdateConnectionState();
             
             if (Config.Instance.PwrButtonConfig.PwrPausesMedia)
             {
-                var media = new WinMediaControl();
-                _ = media.InitializeAsync();
-
-                var powerButtonController = new G733PowerButtonController(media, Logger);
+                var powerButtonController = new G733PowerButtonController(media!, Logger);
 
                 _hid.PowerButtonPressed += powerButtonController.OnButtonPressed;
 
@@ -53,7 +50,7 @@ namespace LogiG733Tray.G733
             return match && device.DevicePath.Contains("col02", StringComparison.OrdinalIgnoreCase);
         }
 
-        private static bool TryCreate(HidDevice hidDevice, out G733Device? g733)
+        private static bool TryCreate(HidDevice hidDevice, WinMediaControl? media, out G733Device? g733)
         {
             if (!IsSupported(hidDevice))
             {
@@ -61,11 +58,11 @@ namespace LogiG733Tray.G733
                 return false;
             }
             
-            g733 = new G733Device(hidDevice);
+            g733 = new G733Device(hidDevice, media);
             return true;
         }
         
-        public static G733Device? GetDevice()
+        public static G733Device? GetDevice(WinMediaControl? media)
         {
             if (_cachedDevice != null)
                 return _cachedDevice;
@@ -84,7 +81,7 @@ namespace LogiG733Tray.G733
                 if (!IsSupported(d))
                     continue;
 
-                if (!TryCreate(d, out var g733) || g733 is null)
+                if (!TryCreate(d, media, out var g733) || g733 is null)
                     continue;
 
                 _cachedDevice = g733;
@@ -100,7 +97,7 @@ namespace LogiG733Tray.G733
             return null;
         }
 
-        public static bool TryConnectReceiver(out G733Device? hidDevice)
+        public static bool TryConnectReceiver(WinMediaControl? media, out G733Device? hidDevice)
         {
             hidDevice = null;
 
@@ -109,7 +106,7 @@ namespace LogiG733Tray.G733
                 if (!IsSupported(hid))
                     continue;
 
-                if (!TryCreate(hid, out var g733) || g733 is null)
+                if (!TryCreate(hid, media, out var g733) || g733 is null)
                     continue;
 
                 _cachedDevice = g733;

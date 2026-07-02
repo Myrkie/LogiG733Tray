@@ -12,6 +12,9 @@ namespace LogiG733Tray.Win
         
         private readonly G733Device? _g733;
         private Label? _label;
+        private Label? _lblMediaSession;
+        private Button? _btnPrevMedia;
+        private Button? _btnNextMedia;
         private Button? _btnUpperLight;
         private Button? _btnLowerLight;
         private Button? _btnBothLights;
@@ -29,13 +32,17 @@ namespace LogiG733Tray.Win
         private ToolTip? _toolTip;
         
         private readonly G733BatteryMonitor? _batteryMonitor;
+        private readonly WinMediaControl? _mediaControl;
         private readonly bool _apiEnabled;
+        private readonly bool _mediaEnabled;
 
-        public LightControlForm(G733Device? g733, G733BatteryMonitor? batteryMonitor, bool apiEnabled)
+        public LightControlForm(G733Device? g733, G733BatteryMonitor? batteryMonitor, bool apiEnabled, bool mediaEnabled, WinMediaControl? mediaControl)
         {
             if (g733 != null) _g733 = g733;
             _batteryMonitor = batteryMonitor;
             _apiEnabled = apiEnabled;
+            _mediaEnabled = mediaEnabled;
+            _mediaControl = mediaControl;
             InitializeComponents();
             SetupOfflineOverlay();
             StartPosition = FormStartPosition.CenterScreen;
@@ -52,11 +59,34 @@ namespace LogiG733Tray.Win
             };
             if (_g733 != null) UpdateConnectionStateUi(_g733.ConnectionState);
         }
+        
+        protected override async void OnLoad(EventArgs e)
+        {
+            try
+            {
+                base.OnLoad(e);
 
+                await RefreshMediaUi();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Failed OnLoad: {ex.Message}", "Error",
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+        
         private void InitializeComponents()
         {
             Text = "LogiTray Control";
-            Size = _apiEnabled ? new Size(380, 440) : new Size(380, 365);
+            int height = 365;
+
+            if (_apiEnabled)
+                height += 25;
+
+            if (_mediaEnabled)
+                height += 75;
+
+            Size = new Size(380, height);
             FormBorderStyle = FormBorderStyle.FixedDialog;
             MaximizeBox = false;
             BackColor = UiUtilities.Bg;
@@ -75,7 +105,30 @@ namespace LogiG733Tray.Win
                 Dock = DockStyle.Fill,
                 TextAlign = ContentAlignment.MiddleCenter
             };
+            
+            _lblMediaSession = new Label
+            {
+                Text = "Loading media...",
+                ForeColor = UiUtilities.Text,
+                Dock = DockStyle.Fill,
+                TextAlign = ContentAlignment.MiddleCenter
+            };
 
+            _btnPrevMedia = UiUtilities.StyledButton("◀");
+            _btnNextMedia = UiUtilities.StyledButton("▶");
+
+            _btnPrevMedia.Click += async (_, _) =>
+            {
+                await _mediaControl!.SelectPreviousSession();
+                await RefreshMediaUi();
+            };
+
+            _btnNextMedia.Click += async (_, _) =>
+            {
+                await _mediaControl!.SelectNextSession();
+                await RefreshMediaUi();
+            };
+            
             _btnUpperLight = UiUtilities.StyledButton("Set Upper LightBar");
             _btnLowerLight = UiUtilities.StyledButton("Set Lower LightBar");
             _btnBothLights = UiUtilities.StyledButton("Set Both LightBars");
@@ -141,11 +194,32 @@ namespace LogiG733Tray.Win
 
             table.Controls.Add(_label, 0, 0);
             table.SetColumnSpan(_label, 2);
+            
+            var mediaPanel = new TableLayoutPanel
+            {
+                ColumnCount = 3,
+                Dock = DockStyle.Fill,
+                AutoSize = true
+            };
 
-            table.Controls.Add(_btnUpperLight, 0, 1);
-            table.Controls.Add(_btnLowerLight, 1, 1);
+            mediaPanel.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
+            mediaPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
+            mediaPanel.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
 
-            table.Controls.Add(_btnBothLights, 0, 2);
+            mediaPanel.Controls.Add(_btnPrevMedia, 0, 0);
+            mediaPanel.Controls.Add(_lblMediaSession, 1, 0);
+            mediaPanel.Controls.Add(_btnNextMedia, 2, 0);
+            
+            if (Config.Instance.PwrButtonConfig.PwrPausesMedia)
+            {
+                table.Controls.Add(mediaPanel, 0, 1);
+                table.SetColumnSpan(mediaPanel, 2);
+            }
+            
+            table.Controls.Add(_btnUpperLight, 0, 2);
+            table.Controls.Add(_btnLowerLight, 1, 2);
+
+            table.Controls.Add(_btnBothLights, 0, 3);
             table.SetColumnSpan(_btnBothLights, 2);
 
             table.Controls.Add(_btnLightsOff, 0, 3);
@@ -264,7 +338,6 @@ namespace LogiG733Tray.Win
             footer.Controls.Add(footerLayout);
             if (_apiEnabled)
             {
-
                 Controls.Add(footer);
                 footer.BringToFront();
             }
@@ -324,6 +397,17 @@ namespace LogiG733Tray.Win
                 MessageBox.Show($"Failed to set Auto Power-Off: {ex.Message}", "Error",
                     MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
+        }
+        
+        private async Task RefreshMediaUi()
+        {
+            if (_lblMediaSession == null) return;
+            if (_mediaControl == null) return;
+
+            var currentSessionNameAsync = await _mediaControl.GetCurrentSessionNameAsync();
+            var currentMediaNameAsync = await _mediaControl.GetCurrentMediaNameAsync();
+
+            _lblMediaSession.Text = string.IsNullOrWhiteSpace(currentMediaNameAsync) ? "No media session" : $"{currentSessionNameAsync} - {currentMediaNameAsync}";
         }
 
         private void SetLight(G733HidClient.LightTarget target, G733HidClient.LightMode mode)

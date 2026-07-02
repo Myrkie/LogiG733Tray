@@ -18,9 +18,11 @@ namespace LogiG733Tray
         private static G733Device? _g733;
         private static G733BatteryMonitor? _batteryMonitor;
         private static ApiHost? _apiHost;
+        private static WinMediaControl? _mediaControl;
         public static NotifyIcon NotifyIcon() => _notifyIcon;
 
         private static readonly bool ApiEnabled = Config.Instance.ApiConfig.InitializeApi;
+        private static readonly bool MediaEnabled = Config.Instance.PwrButtonConfig.PwrPausesMedia;
 
         [STAThread]
         private static void Main()
@@ -68,7 +70,7 @@ namespace LogiG733Tray
             var connectReceiverItem = new ToolStripMenuItem(
                 "Connect to receiver",
                 null,
-                (_, _) => { AttachDevice(G733Device.TryConnectReceiver(out var device) ? device : null); });
+                (_, _) => { AttachDevice(G733Device.TryConnectReceiver(_mediaControl, out var device) ? device : null); });
 
             contextMenu.Items.Add(colorPickerItem);
             contextMenu.Items.Add(connectReceiverItem);
@@ -82,8 +84,14 @@ namespace LogiG733Tray
                 Visible = true,
                 Text = "LogiTray Battery Monitor"
             };
+            
+            if (Config.Instance.PwrButtonConfig.PwrPausesMedia)
+            { 
+                _mediaControl = new WinMediaControl(); 
+                _ = _mediaControl.InitializeAsync();
+            }
 
-            AttachDevice(G733Device.GetDevice());
+            AttachDevice(G733Device.GetDevice(_mediaControl));
 
             Application.Run();
             return;
@@ -216,7 +224,7 @@ namespace LogiG733Tray
         {
             if (_lightControlForm == null || _lightControlForm.IsDisposed)
             {
-                _lightControlForm = new LightControlForm(_g733, _batteryMonitor, ApiEnabled);
+                _lightControlForm = new LightControlForm(_g733, _batteryMonitor, ApiEnabled, MediaEnabled, _mediaControl);
                 _lightControlForm.Show();
             }
             else if (!_lightControlForm.Visible)
