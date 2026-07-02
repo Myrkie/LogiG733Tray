@@ -70,7 +70,91 @@ namespace LogiTrayAndroid.Services
             var json = await response.Content.ReadAsStringAsync();
             return int.TryParse(json, out int minutes) ? minutes : throw new FormatException($"GetAutoPowerOff returned invalid data: {json}");
         }
+        
+        
+        public async Task<MediaResponse?> GetMediaStatusAsync()
+        {
+            EnsureClient();
+            var response = await _client!.GetAsync("/media-status");
 
+            if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+                throw new UnauthorizedException();
+            
+            if (!response.IsSuccessStatusCode)
+            {
+                var text = await response.Content.ReadAsStringAsync();
+                throw new HttpRequestException(
+                    $"etMediaStatus failed: {(int)response.StatusCode} {response.ReasonPhrase}. {text}");
+            }
+
+            var json = await response.Content.ReadAsStringAsync();
+            return JsonSerializer.Deserialize(json, AppJsonContext.Default.MediaResponse);
+        }
+        
+        public async Task<SessionSwitchResponse?> GetMediaNextAsync()
+        {
+            EnsureClient();
+
+            var response = await _client!.PostAsync("/media-next", null);
+
+            if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+                throw new UnauthorizedException();
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var text = await response.Content.ReadAsStringAsync();
+                throw new HttpRequestException(
+                    $"GetMediaNext failed: {(int)response.StatusCode} {response.ReasonPhrase}. {text}");
+            }
+
+            var json = await response.Content.ReadAsStringAsync();
+
+            return JsonSerializer.Deserialize(json, AppJsonContext.Default.SessionSwitchResponse);
+        }
+        
+        public async Task<SessionSwitchResponse?> GetMediaPreviousAsync()
+        {
+            EnsureClient();
+
+            var response = await _client!.PostAsync("/media-previous", null);
+
+            if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+                throw new UnauthorizedException();
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var text = await response.Content.ReadAsStringAsync();
+                throw new HttpRequestException(
+                    $"GetMediaPrevious failed: {(int)response.StatusCode} {response.ReasonPhrase}. {text}");
+            }
+
+            var json = await response.Content.ReadAsStringAsync();
+
+            return JsonSerializer.Deserialize(json, AppJsonContext.Default.SessionSwitchResponse);
+        }
+        
+        public async Task<SessionStateResponse?> GetMediaStateAsync()
+        {
+            EnsureClient();
+
+            var response = await _client!.GetAsync("/media-state");
+
+            if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+                throw new UnauthorizedException();
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var text = await response.Content.ReadAsStringAsync();
+                throw new HttpRequestException(
+                    $"GetMediaStateAsync failed: {(int)response.StatusCode} {response.ReasonPhrase}. {text}");
+            }
+
+            var json = await response.Content.ReadAsStringAsync();
+
+            return JsonSerializer.Deserialize(json, AppJsonContext.Default.SessionStateResponse);
+        }
+        
+        
         public async Task SetAutoPowerOffAsync(int minutes)
         {
             EnsureClient();

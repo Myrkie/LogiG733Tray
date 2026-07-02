@@ -25,6 +25,20 @@ namespace LogiTrayAndroid.Services.Models
         [property: JsonPropertyName("state")] DeviceConnectionState State,
         [property: JsonPropertyName("battery")] BatteryInfo? Battery
     );
+    
+    public record MediaResponse(
+        [property: JsonPropertyName("session")] string Session,
+        [property: JsonPropertyName("media")] string Media,
+        [property: JsonPropertyName("display")] string Display
+    );
+    
+    public record SessionSwitchResponse(
+        [property: JsonPropertyName("newSession")] string NewSession
+    );
+    
+    public record SessionStateResponse(
+        [property: JsonPropertyName("sessionState")] bool SessionState
+    );
 
     public class BatteryInfo
     {

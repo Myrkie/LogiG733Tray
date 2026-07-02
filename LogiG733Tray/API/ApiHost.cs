@@ -1,6 +1,7 @@
 ﻿using LogiG733Tray.API.Models;
 using LogiG733Tray.G733;
 using LogiG733Tray.Utils;
+using LogiG733Tray.Win;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
@@ -9,10 +10,10 @@ using Serilog;
 
 namespace LogiG733Tray.API
 {
-    public class ApiHost(G733Device device, G733BatteryMonitor batteryMonitor) : IDisposable
+    public class ApiHost(G733Device device, G733BatteryMonitor batteryMonitor, WinMediaControl? media) : IDisposable
     {
         private WebApplication? _app;
-        
+
         public void Dispose()
         {
             if (_app == null) return;
@@ -117,6 +118,58 @@ namespace LogiG733Tray.API
                 device.DisableLights();
                 return Results.Ok();
             });
+            
+            if (Config.Instance.PwrButtonConfig.PwrPausesMedia)
+            {
+                _app.MapGet("/media-status", async () =>
+                {
+                    var session = await media!.GetCurrentSessionNameAsync();
+                    var media1 = await media.GetCurrentMediaNameAsync();
+
+
+                    var mediaResponse = new MediaResponse(session, media1!, $"{session} - {media1}");
+                    return Results.Ok(mediaResponse);
+                });
+
+                _app.MapPost("/media-next", async () =>
+                {
+                    await media!.SelectNextSession();
+                    
+                    var session = await media!.GetCurrentSessionNameAsync();
+                    var media1 = await media.GetCurrentMediaNameAsync();
+
+                    var sessionSwitchResponse = new SessionSwitchResponse($"{session} - {media1}");
+                    
+                    return Results.Ok(sessionSwitchResponse);
+                });
+
+                _app.MapPost("/media-previous", async() =>
+                {
+                    await media!.SelectPreviousSession();
+                    
+                    var session = await media!.GetCurrentSessionNameAsync();
+                    var media1 = await media.GetCurrentMediaNameAsync();
+
+                    var sessionSwitchResponse = new SessionSwitchResponse($"{session} - {media1}");
+                    
+                    return Results.Ok(sessionSwitchResponse);
+                });
+                
+                _app.MapGet("/media-state", () =>
+                {
+                    try
+                    {
+                        var session = Config.Instance.PwrButtonConfig.PwrPausesMedia;
+                    
+                        var sessionStateResponse = new SessionStateResponse(session);
+                        return Task.FromResult(Results.Ok(sessionStateResponse));
+                    }
+                    catch (Exception exception)
+                    {
+                        return Task.FromException<IResult>(exception);
+                    }
+                });
+            }
 
             _app.RunAsync();
         }

@@ -128,7 +128,7 @@ namespace LogiG733Tray
                         _apiHost.Dispose();
                         _apiHost = null;
                     }
-                    _apiHost = new ApiHost(_g733, _batteryMonitor);
+                    _apiHost = new ApiHost(_g733, _batteryMonitor, _mediaControl!);
                     _apiHost.Start();
                 }
 

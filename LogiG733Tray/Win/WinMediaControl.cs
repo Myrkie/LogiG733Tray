@@ -7,6 +7,7 @@ namespace LogiG733Tray.Win
     {
         private GlobalSystemMediaTransportControlsSessionManager? _manager;
         private GlobalSystemMediaTransportControlsSession? _selectedSession;
+        public event Action? MediaChanged;
 
         public async Task InitializeAsync()
         {
@@ -70,7 +71,7 @@ namespace LogiG733Tray.Win
 
                 int nextIndex = (currentIndex + 1) % sessions.Count;
                 _selectedSession = sessions[nextIndex];
-
+                MediaChanged?.Invoke();
                 return GetSessionNameAsync(_selectedSession);
             }
             catch (Exception exception)
@@ -112,7 +113,7 @@ namespace LogiG733Tray.Win
 
                 int previousIndex = (currentIndex - 1 + sessions.Count) % sessions.Count;
                 _selectedSession = sessions[previousIndex];
-
+                MediaChanged?.Invoke();
                 return GetSessionNameAsync(_selectedSession);
             }
             catch (Exception ex)

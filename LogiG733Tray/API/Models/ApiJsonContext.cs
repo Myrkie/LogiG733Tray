@@ -5,6 +5,9 @@ namespace LogiG733Tray.API.Models
 {
     [JsonSourceGenerationOptions(WriteIndented = true)]
     [JsonSerializable(typeof(StatusResponse))]
+    [JsonSerializable(typeof(MediaResponse))]
+    [JsonSerializable(typeof(SessionSwitchResponse))]
+    [JsonSerializable(typeof(SessionStateResponse))]
     [JsonSerializable(typeof(PowerOffRequest))]
     [JsonSerializable(typeof(LightRequest))]
     [JsonSerializable(typeof(BatteryInfo))]

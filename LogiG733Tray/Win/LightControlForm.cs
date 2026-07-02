@@ -43,6 +43,17 @@ namespace LogiG733Tray.Win
             _apiEnabled = apiEnabled;
             _mediaEnabled = mediaEnabled;
             _mediaControl = mediaControl;
+            _mediaControl!.MediaChanged += async () =>
+            {
+                if (InvokeRequired)
+                {
+                    await Invoke(async () => await RefreshMediaUi());
+                }
+                else
+                {
+                    await RefreshMediaUi();
+                }
+            };
             InitializeComponents();
             SetupOfflineOverlay();
             StartPosition = FormStartPosition.CenterScreen;
@@ -109,26 +120,16 @@ namespace LogiG733Tray.Win
             _lblMediaSession = new Label
             {
                 Text = "Loading media...",
+                Font = UiUtilities.SegoeUi7Standard,
                 ForeColor = UiUtilities.Text,
                 Dock = DockStyle.Fill,
                 TextAlign = ContentAlignment.MiddleCenter
             };
 
             _btnPrevMedia = UiUtilities.StyledButton("◀");
+            _btnPrevMedia.Font = UiUtilities.SegoeUi7Standard;
             _btnNextMedia = UiUtilities.StyledButton("▶");
-
-            _btnPrevMedia.Click += async (_, _) =>
-            {
-                await _mediaControl!.SelectPreviousSession();
-                await RefreshMediaUi();
-            };
-
-            _btnNextMedia.Click += async (_, _) =>
-            {
-                await _mediaControl!.SelectNextSession();
-                await RefreshMediaUi();
-            };
-            
+            _btnNextMedia.Font = UiUtilities.SegoeUi7Standard;
             _btnUpperLight = UiUtilities.StyledButton("Set Upper LightBar");
             _btnLowerLight = UiUtilities.StyledButton("Set Lower LightBar");
             _btnBothLights = UiUtilities.StyledButton("Set Both LightBars");
@@ -163,6 +164,17 @@ namespace LogiG733Tray.Win
                 TextAlign = ContentAlignment.MiddleRight
             };
 
+            _btnPrevMedia.Click += async (_, _) =>
+            {
+                await _mediaControl!.SelectPreviousSession();
+                await RefreshMediaUi();
+            };
+
+            _btnNextMedia.Click += async (_, _) =>
+            {
+                await _mediaControl!.SelectNextSession();
+                await RefreshMediaUi();
+            };
             _btnUpperLight.Click += (_, _) => SetLight(G733HidClient.LightTarget.Upper, G733HidClient.LightMode.Static);
             _btnLowerLight.Click += (_, _) => SetLight(G733HidClient.LightTarget.Lower, G733HidClient.LightMode.Static);
             _btnBothLights.Click += (_, _) => SetBothLights();
