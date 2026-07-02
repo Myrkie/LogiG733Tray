@@ -7,7 +7,7 @@ namespace LogiG733Tray.API.Models
     [JsonSerializable(typeof(StatusResponse))]
     [JsonSerializable(typeof(MediaResponse))]
     [JsonSerializable(typeof(SessionSwitchResponse))]
-    [JsonSerializable(typeof(SessionStateResponse))]
+    [JsonSerializable(typeof(SessionPowerStateResponse))]
     [JsonSerializable(typeof(PowerOffRequest))]
     [JsonSerializable(typeof(LightRequest))]
     [JsonSerializable(typeof(BatteryInfo))]

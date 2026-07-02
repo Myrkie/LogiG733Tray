@@ -36,7 +36,41 @@
                     android:gravity="center"
                     android:layout_marginBottom="8dp"/>
 
+            <LinearLayout
+                    android:id="@+id/mediaControls"
+                    android:orientation="horizontal"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="10dp"
+                    android:visibility="gone">
 
+                <Button
+                        android:id="@+id/btnPrevMedia"
+                        android:text="◀"
+                        android:layout_width="0dp"
+                        android:layout_weight="1"
+                        android:layout_height="wrap_content"
+                        android:backgroundTint="#333333"
+                        android:textColor="#FFFFFF"/>
+
+                <TextView
+                        android:id="@+id/tvMediaSession"
+                        android:text="No media session"
+                        android:gravity="center"
+                        android:layout_width="0dp"
+                        android:layout_weight="2"
+                        android:layout_height="wrap_content"/>
+
+                <Button
+                        android:id="@+id/btnNextMedia"
+                        android:text="▶"
+                        android:layout_width="0dp"
+                        android:layout_weight="1"
+                        android:layout_height="wrap_content"
+                        android:backgroundTint="#333333"
+                        android:textColor="#FFFFFF"/>
+            </LinearLayout>
+            
             <LinearLayout
                     android:orientation="horizontal"
                     android:layout_width="match_parent"

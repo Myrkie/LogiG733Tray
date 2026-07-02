@@ -6,7 +6,7 @@ namespace LogiTrayAndroid.Services.Models
     [JsonSerializable(typeof(StatusResponse))]
     [JsonSerializable(typeof(MediaResponse))]
     [JsonSerializable(typeof(SessionSwitchResponse))]
-    [JsonSerializable(typeof(SessionStateResponse))]
+    [JsonSerializable(typeof(SessionPowerStateResponse))]
     [JsonSerializable(typeof(SetLightRequest))]
     [JsonSerializable(typeof(SetAutoPowerOffRequest))]
     internal partial class AppJsonContext : JsonSerializerContext

@@ -11,7 +11,7 @@ namespace LogiG733Tray.Win
         private static readonly ILogger Logger = Log.ForContext<LightControlForm>();
         
         private readonly G733Device? _g733;
-        private Label? _label;
+        private Label? _deviceLabel;
         private Label? _lblMediaSession;
         private Button? _btnPrevMedia;
         private Button? _btnNextMedia;
@@ -108,7 +108,7 @@ namespace LogiG733Tray.Win
                 AutoPopDelay = 500,
             };
             
-            _label = new Label
+            _deviceLabel = new Label
             {
                 Text = $"Device: {_g733?.Name}",
                 Font = UiUtilities.SegoeUi12Bold,
@@ -204,8 +204,8 @@ namespace LogiG733Tray.Win
             for (int i = 0; i < table.RowCount; i++)
                 table.RowStyles.Add(new RowStyle(SizeType.AutoSize));
 
-            table.Controls.Add(_label, 0, 0);
-            table.SetColumnSpan(_label, 2);
+            table.Controls.Add(_deviceLabel, 0, 0);
+            table.SetColumnSpan(_deviceLabel, 2);
             
             var mediaPanel = new TableLayoutPanel
             {

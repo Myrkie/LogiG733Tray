@@ -15,7 +15,11 @@ namespace LogiTrayAndroid
     )]
     public class MainActivity : Activity
     {
-        private Button _btnUpperLight = null!,
+        private bool _mediaSessionEnabled;
+        
+        private Button _btnNextMedia = null!,
+                       _btnPrevMedia = null!,
+                       _btnUpperLight = null!,
                        _btnLowerLight = null!,
                        _btnBothLights = null!,
                        _btnLightsOff = null!,
@@ -27,12 +31,14 @@ namespace LogiTrayAndroid
         private TextView _tvBatteryPercent = null!,
                          _tvBatteryVoltage = null!,
                          _tvDevice = null!,
-                         _tvNextRefresh = null!;
+                         _tvNextRefresh = null!,
+                         _tvMediaSession = null!;
 
         private EditText _etAutoPowerOff = null!,
                          _etIpAddress = null!,
                          _etApiKey = null!;
 
+        private LinearLayout _mediaControls = null!;
         private LinearLayout _overlayAsleep = null!;
         private ProgressBar _pbBattery = null!;
 
@@ -53,6 +59,11 @@ namespace LogiTrayAndroid
             _tvDevice = FindViewById<TextView>(ResourceConstant.Id.tvDevice)!;
             _tvNextRefresh = FindViewById<TextView>(ResourceConstant.Id.tvNextRefresh)!;
 
+            _mediaControls = FindViewById<LinearLayout>(ResourceConstant.Id.mediaControls)!;
+            _btnPrevMedia = FindViewById<Button>(ResourceConstant.Id.btnPrevMedia)!;
+            _btnNextMedia = FindViewById<Button>(ResourceConstant.Id.btnNextMedia)!;
+            _tvMediaSession = FindViewById<TextView>(ResourceConstant.Id.tvMediaSession)!;
+            
             _btnUpperLight = FindViewById<Button>(ResourceConstant.Id.btnUpperLight)!;
             _btnLowerLight = FindViewById<Button>(ResourceConstant.Id.btnLowerLight)!;
             _btnBothLights = FindViewById<Button>(ResourceConstant.Id.btnBothLights)!;
@@ -68,6 +79,25 @@ namespace LogiTrayAndroid
             _etApiKey = FindViewById<EditText>(ResourceConstant.Id.etApiKey)!;
             _btnSetConnection = FindViewById<Button>(ResourceConstant.Id.btnSetConnection)!;
 
+            
+            _btnPrevMedia.Click += async (_, _) =>
+            {
+                await SafeCall(async () =>
+                {
+                    await _httpService.GetMediaPreviousAsync();
+                    await RefreshMediaUi();
+                });
+            };
+
+            _btnNextMedia.Click += async (_, _) =>
+            {
+                await SafeCall(async () =>
+                {
+                    await _httpService.GetMediaNextAsync();
+                    await RefreshMediaUi();
+                });
+            };
+            
             _btnUpperLight.Click += async (_, _) => await PickColorAndSetLight("upper");
             _btnLowerLight.Click += async (_, _) => await PickColorAndSetLight("lower");
             _btnBothLights.Click += async (_, _) => await PickColorAndSetLight("both");
@@ -242,6 +272,8 @@ namespace LogiTrayAndroid
             try
             {
                 var status = await _httpService.GetStatusAsync();
+                await RefreshSessionState();
+                await RefreshMediaUi();
                 RunOnUiThread(() =>
                 {
                     _tvDevice.Text = $"Device: {status!.Device}";
@@ -278,6 +310,59 @@ namespace LogiTrayAndroid
             {
                 Logger.Error(ex.ToString());
                 return false;
+            }
+        }
+        
+        private async Task RefreshSessionState()
+        {
+            if (!_httpService.IsConnected) return;
+
+            try
+            {
+                var state = await _httpService.GetMediaPowerStateAsync();
+                bool newState = state?.SessionPwr ?? false;
+
+                bool becameEnabled = newState && !_mediaSessionEnabled;
+
+                _mediaSessionEnabled = newState;
+
+                RunOnUiThread(() =>
+                {
+                    _mediaControls.Visibility = _mediaSessionEnabled
+                        ? ViewStates.Visible
+                        : ViewStates.Gone;
+                });
+
+                if (becameEnabled)
+                {
+                    await RefreshMediaUi();
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.Error(ex.ToString());
+            }
+        }
+        
+        private async Task RefreshMediaUi()
+        {
+            if (!_httpService.IsConnected || !_mediaSessionEnabled) return;
+
+            try
+            {
+                var media = await _httpService.GetMediaStatusAsync();
+
+                RunOnUiThread(() =>
+                {
+                    _tvMediaSession.Text =
+                        string.IsNullOrWhiteSpace(media?.Media)
+                            ? "No media session"
+                            : $"{media.Session} - {media.Media}";
+                });
+            }
+            catch (Exception ex)
+            {
+                Logger.Error(ex.ToString());
             }
         }
 

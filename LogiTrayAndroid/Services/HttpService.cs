@@ -84,14 +84,14 @@ namespace LogiTrayAndroid.Services
             {
                 var text = await response.Content.ReadAsStringAsync();
                 throw new HttpRequestException(
-                    $"etMediaStatus failed: {(int)response.StatusCode} {response.ReasonPhrase}. {text}");
+                    $"GetMediaStatus failed: {(int)response.StatusCode} {response.ReasonPhrase}. {text}");
             }
 
             var json = await response.Content.ReadAsStringAsync();
             return JsonSerializer.Deserialize(json, AppJsonContext.Default.MediaResponse);
         }
         
-        public async Task<SessionSwitchResponse?> GetMediaNextAsync()
+        public async Task GetMediaNextAsync()
         {
             EnsureClient();
 
@@ -109,10 +109,10 @@ namespace LogiTrayAndroid.Services
 
             var json = await response.Content.ReadAsStringAsync();
 
-            return JsonSerializer.Deserialize(json, AppJsonContext.Default.SessionSwitchResponse);
+            JsonSerializer.Deserialize(json, AppJsonContext.Default.SessionSwitchResponse);
         }
         
-        public async Task<SessionSwitchResponse?> GetMediaPreviousAsync()
+        public async Task GetMediaPreviousAsync()
         {
             EnsureClient();
 
@@ -130,14 +130,14 @@ namespace LogiTrayAndroid.Services
 
             var json = await response.Content.ReadAsStringAsync();
 
-            return JsonSerializer.Deserialize(json, AppJsonContext.Default.SessionSwitchResponse);
+            JsonSerializer.Deserialize(json, AppJsonContext.Default.SessionSwitchResponse);
         }
         
-        public async Task<SessionStateResponse?> GetMediaStateAsync()
+        public async Task<SessionPowerStateResponse?> GetMediaPowerStateAsync()
         {
             EnsureClient();
 
-            var response = await _client!.GetAsync("/media-state");
+            var response = await _client!.GetAsync("/media-pwr");
 
             if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
                 throw new UnauthorizedException();
@@ -151,7 +151,7 @@ namespace LogiTrayAndroid.Services
 
             var json = await response.Content.ReadAsStringAsync();
 
-            return JsonSerializer.Deserialize(json, AppJsonContext.Default.SessionStateResponse);
+            return JsonSerializer.Deserialize(json, AppJsonContext.Default.SessionPowerStateResponse);
         }
         
         

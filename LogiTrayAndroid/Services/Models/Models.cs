@@ -36,8 +36,8 @@ namespace LogiTrayAndroid.Services.Models
         [property: JsonPropertyName("newSession")] string NewSession
     );
     
-    public record SessionStateResponse(
-        [property: JsonPropertyName("sessionState")] bool SessionState
+    public record SessionPowerStateResponse(
+        [property: JsonPropertyName("sessionPwr")] bool SessionPwr
     );
 
     public class BatteryInfo

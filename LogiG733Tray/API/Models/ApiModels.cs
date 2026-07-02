@@ -28,7 +28,7 @@ namespace LogiG733Tray.API.Models
     public record SessionSwitchResponse(
         [property: JsonPropertyName("newSession")] string NewSession
     );
-    public record SessionStateResponse(
-        [property: JsonPropertyName("sessionState")] bool SessionState
+    public record SessionPowerStateResponse(
+        [property: JsonPropertyName("sessionPwr")] bool SessionPwr
     );
 }

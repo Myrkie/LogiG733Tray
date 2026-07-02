@@ -155,13 +155,13 @@ namespace LogiG733Tray.API
                     return Results.Ok(sessionSwitchResponse);
                 });
                 
-                _app.MapGet("/media-state", () =>
+                _app.MapGet("/media-pwr", () =>
                 {
                     try
                     {
                         var session = Config.Instance.PwrButtonConfig.PwrPausesMedia;
                     
-                        var sessionStateResponse = new SessionStateResponse(session);
+                        var sessionStateResponse = new SessionPowerStateResponse(session);
                         return Task.FromResult(Results.Ok(sessionStateResponse));
                     }
                     catch (Exception exception)
