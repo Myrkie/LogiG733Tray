@@ -1,6 +1,7 @@
 using _Microsoft.Android.Resource.Designer;
 using Android.Content;
 using Android.Graphics;
+using Android.Graphics.Drawables;
 using Android.Views;
 using LogiTrayAndroid.Services;
 using LogiTrayAndroid.Services.Models;
@@ -368,7 +369,7 @@ namespace LogiTrayAndroid
 
         private async Task PickColorAndSetLight(string target)
         {
-            _colorPickerTcs = new TaskCompletionSource<(int[], LightMode)>();
+            _colorPickerTcs = new TaskCompletionSource<(int[] Color, LightMode Mode)>();
 
             RunOnUiThread(() =>
             {
@@ -377,24 +378,25 @@ namespace LogiTrayAndroid
 
                 var layout = new LinearLayout(this)
                 {
-                    Orientation = Orientation.Vertical,
-                    DividerPadding = 20,
+                    Orientation = Orientation.Vertical
                 };
+
+                layout.SetPadding(40,
+                    30,
+                    40,
+                    20);
+                layout.SetBackgroundColor(Color.ParseColor("#202124"));
 
                 var modeSpinner = new Spinner(this);
 
-                var modes = Enum.GetValues(typeof(LightMode))
-                    .Cast<LightMode>()
-                    .ToList();
+                var modes = Enum.GetValues(typeof(LightMode)).Cast<LightMode>().ToList();
 
-                var adapter = new ArrayAdapter(
-                    this,
-                    Android.Resource.Layout.SimpleSpinnerItem,
-                    modes.Select(m => m.ToString()).ToList()
-                );
+                var adapter = new ArrayAdapter<string>(this, Android.Resource.Layout.SimpleSpinnerItem,
+                    modes.Select(m => m.ToString()).ToList());
                 
                 adapter.SetDropDownViewResource(Android.Resource.Layout.SimpleSpinnerDropDownItem);
-                modeSpinner.Adapter = adapter;
+
+                modeSpinner.Adapter = new DarkSpinnerAdapter(this, adapter);
 
                 var selectedMode = LightMode.Static;
                 modeSpinner.SetSelection(modes.IndexOf(selectedMode));
@@ -404,30 +406,69 @@ namespace LogiTrayAndroid
                 var preview = new View(this)
                 {
                     LayoutParameters = new LinearLayout.LayoutParams(
-                        ViewGroup.LayoutParams.MatchParent, 100)
+                        ViewGroup.LayoutParams.MatchParent,
+                        100)
                 };
+
+                var previewDrawable = new GradientDrawable();
+                previewDrawable.SetCornerRadius(30f);
+                previewDrawable.SetColor(Color.White);
+
+                preview.Background = previewDrawable;
+
+                var previewParams = (LinearLayout.LayoutParams)preview.LayoutParameters;
+                previewParams.TopMargin = 25;
+                previewParams.BottomMargin = 25;
+
                 layout.AddView(preview);
 
-                SeekBar sbR = new SeekBar(this) { Max = 255 };
-                SeekBar sbG = new SeekBar(this) { Max = 255 };
-                SeekBar sbB = new SeekBar(this) { Max = 255 };
+                TextView tvR = new TextView(this);
+                TextView tvG = new TextView(this);
+                TextView tvB = new TextView(this);
 
-                TextView tvR = new TextView(this) { Text = "R: 0" };
-                TextView tvG = new TextView(this) { Text = "G: 0" };
-                TextView tvB = new TextView(this) { Text = "B: 0" };
+                tvR.SetTextColor(Color.White);
+                tvG.SetTextColor(Color.White);
+                tvB.SetTextColor(Color.White);
+
+                tvR.Text = "R: 0";
+                tvG.Text = "G: 0";
+                tvB.Text = "B: 0";
+
+                SeekBar sbR = new SeekBar(this)
+                {
+                    Max = 255
+                };
+                SeekBar sbG = new SeekBar(this)
+                {
+                    Max = 255
+                };
+                SeekBar sbB = new SeekBar(this)
+                {
+                    Max = 255
+                };
 
                 layout.AddView(tvR);
                 layout.AddView(sbR);
+
                 layout.AddView(tvG);
                 layout.AddView(sbG);
+
                 layout.AddView(tvB);
                 layout.AddView(sbB);
 
                 void SetColorControlsEnabled(bool enabled)
                 {
-                    sbR.Enabled = sbG.Enabled = sbB.Enabled = enabled;
-                    tvR.Enabled = tvG.Enabled = tvB.Enabled = enabled;
-                    preview.Alpha = enabled ? 1f : 0.3f;
+                    sbR.Enabled = enabled;
+                    sbG.Enabled = enabled;
+                    sbB.Enabled = enabled;
+
+                    tvR.Enabled = enabled;
+                    tvG.Enabled = enabled;
+                    tvB.Enabled = enabled;
+
+                    preview.Alpha = enabled
+                        ? 1f
+                        : 0.35f;
                 }
 
                 void UpdatePreview()
@@ -438,7 +479,7 @@ namespace LogiTrayAndroid
                     int g = sbG.Progress;
                     int b = sbB.Progress;
 
-                    preview.SetBackgroundColor(Color.Argb(255, r, g, b));
+                    previewDrawable.SetColor(Color.Rgb(r, g, b));
                     tvR.Text = $"R: {r}";
                     tvG.Text = $"G: {g}";
                     tvB.Text = $"B: {b}";
@@ -450,7 +491,6 @@ namespace LogiTrayAndroid
                 modeSpinner.ItemSelected += (_, e) =>
                 {
                     selectedMode = modes[e.Position];
-
                     SetColorControlsEnabled(selectedMode != LightMode.Cycle);
                 };
 
@@ -463,8 +503,24 @@ namespace LogiTrayAndroid
 
                 builder.SetNegativeButton("Cancel", (_, _) => { });
 
-                
-                builder.Create()?.Show();
+                var dialog = builder.Create();
+
+                dialog?.Show();
+
+                dialog?.Window?.SetBackgroundDrawable(new Android.Graphics.Drawables.ColorDrawable(Color.ParseColor("#202124")));
+
+                dialog?.GetButton((int)DialogButtonType.Positive)?.SetTextColor(Color.ParseColor("#8AB4F8"));
+
+                dialog?.GetButton((int)DialogButtonType.Negative)?.SetTextColor(Color.ParseColor("#8AB4F8"));
+
+                if (Resources != null)
+                {
+                    int titleId = Resources.GetIdentifier("alertTitle", "id", "android");
+                    var title = dialog?.FindViewById<TextView>(titleId);
+                    title?.SetTextColor(Color.White);
+                }
+
+                UpdatePreview();
             });
 
             var selected = await _colorPickerTcs.Task;
