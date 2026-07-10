@@ -43,7 +43,7 @@ namespace LogiG733Tray.Win
             _apiEnabled = apiEnabled;
             _mediaEnabled = mediaEnabled;
             _mediaControl = mediaControl;
-            _mediaControl!.MediaChanged += async () =>
+            _mediaControl?.MediaChanged += async () =>
             {
                 if (InvokeRequired)
                 {
