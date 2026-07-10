@@ -95,7 +95,7 @@ namespace LogiG733Tray.Win
                 height += 25;
 
             if (_mediaEnabled)
-                height += 75;
+                height += 60;
 
             Size = new Size(380, height);
             FormBorderStyle = FormBorderStyle.FixedDialog;
