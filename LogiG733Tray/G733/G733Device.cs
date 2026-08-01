@@ -208,33 +208,36 @@ namespace LogiG733Tray.G733
             _hid.DisableLights();
         }
 
+        private readonly Lock _ioLock = new();
+
         public BatteryInfo GetBatteryInfo()
         {
-            try
+            lock (_ioLock)
             {
-                var response = _hid.SendBatteryRequest();
-                if (response.Length == 0)
+                try
+                {
+                    var response = _hid.SendBatteryRequest();
+                    if (response.Length == 0)
+                        return new BatteryInfo { Status = BatteryStatus.Timeout };
+
+                    Logger.Debug("Raw battery response: {Hex}", Convert.ToHexString(response));
+                    ushort voltage = (ushort)((response[4] << 8) | response[5]);
+                    byte state = response[6];
+
+                    if (voltage != 0)
+                        return new BatteryInfo
+                        {
+                            Status = state == 0x03 ? BatteryStatus.Charging : BatteryStatus.Detected,
+                            Level = MapVoltageToPercent(voltage),
+                            VoltageMv = voltage
+                        };
+                    Logger.Warning("Discarded invalid battery reading: Voltage was 0.");
                     return new BatteryInfo { Status = BatteryStatus.Timeout };
-
-                ushort voltage = (ushort)((response[4] << 8) | response[5]);
-                byte state = response[6];
-
-                if (voltage != 0)
-                    return new BatteryInfo
-                    {
-                        Status = state == 0x03
-                            ? BatteryStatus.Charging
-                            : BatteryStatus.Detected,
-                        Level = MapVoltageToPercent(voltage),
-                        VoltageMv = voltage
-                    };
-                Logger.Warning("Discarded invalid battery reading: Voltage was 0.");
-                return new BatteryInfo { Status = BatteryStatus.Timeout };
-
-            }
-            catch
-            {
-                return new BatteryInfo { Status = BatteryStatus.Unavailable };
+                }
+                catch
+                {
+                    return new BatteryInfo { Status = BatteryStatus.Unavailable };
+                }
             }
         }
 

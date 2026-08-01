@@ -396,7 +396,7 @@ namespace LogiTrayAndroid
                 
                 adapter.SetDropDownViewResource(Android.Resource.Layout.SimpleSpinnerDropDownItem);
 
-                modeSpinner.Adapter = new DarkSpinnerAdapter(this, adapter);
+                modeSpinner.Adapter = new DarkSpinnerAdapter(adapter);
 
                 var selectedMode = LightMode.Static;
                 modeSpinner.SetSelection(modes.IndexOf(selectedMode));
@@ -507,7 +507,7 @@ namespace LogiTrayAndroid
 
                 dialog?.Show();
 
-                dialog?.Window?.SetBackgroundDrawable(new Android.Graphics.Drawables.ColorDrawable(Color.ParseColor("#202124")));
+                dialog?.Window?.SetBackgroundDrawable(new ColorDrawable(Color.ParseColor("#202124")));
 
                 dialog?.GetButton((int)DialogButtonType.Positive)?.SetTextColor(Color.ParseColor("#8AB4F8"));
 

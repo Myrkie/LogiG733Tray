@@ -7,18 +7,13 @@ namespace LogiG733Tray.G733.Controllers
     public sealed class G733PowerButtonController(WinMediaControl media, ILogger logger) : IDisposable
     {
         private CancellationTokenSource? _clickCts;
-        
+        private int _clickCount;
         public void OnButtonPressed()
         {
-            if (_clickCts != null)
-            {
-                _clickCts.Cancel();
-                _clickCts.Dispose();
-                _clickCts = null;
+            _clickCount++;
 
-                _ = HandleDoubleClickAsync();
-                return;
-            }
+            _clickCts?.Cancel();
+            _clickCts?.Dispose();
 
             _clickCts = new CancellationTokenSource();
             var token = _clickCts.Token;
@@ -27,11 +22,26 @@ namespace LogiG733Tray.G733.Controllers
             {
                 try
                 {
-                    await Task.Delay(Config.Instance.PwrButtonConfig.DoubleClickDelayMs, token);
+                    await Task.Delay(
+                        Config.Instance.PwrButtonConfig.DoubleClickDelayMs,
+                        token);
 
-                    if (!token.IsCancellationRequested)
+                    if (token.IsCancellationRequested)
+                        return;
+
+                    var clickCount = _clickCount;
+                    _clickCount = 0;
+
+                    switch (clickCount)
                     {
                         await HandleSingleClickAsync();
+                        case 1:
+                            await HandleSingleClickAsync();
+                            break;
+
+                        case 2:
+                            await HandleDoubleClickAsync();
+                            break;
                     }
                 }
                 catch (TaskCanceledException)

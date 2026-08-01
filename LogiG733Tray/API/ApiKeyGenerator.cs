@@ -36,5 +36,4 @@ namespace LogiG733Tray.API
             return sb.ToString();
         }
     }
-
 }

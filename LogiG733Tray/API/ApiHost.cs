@@ -25,8 +25,7 @@ namespace LogiG733Tray.API
             var builder = WebApplication.CreateBuilder();
             builder.Services.ConfigureHttpJsonOptions(options =>
             {
-                options.SerializerOptions.TypeInfoResolverChain.Insert(
-                    0, ApiJsonContext.Default);
+                options.SerializerOptions.TypeInfoResolverChain.Insert(0, ApiJsonContext.Default);
             });
 
             var localip = Utilities.GetLocalIp();
