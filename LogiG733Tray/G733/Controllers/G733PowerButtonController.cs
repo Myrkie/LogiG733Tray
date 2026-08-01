@@ -22,9 +22,7 @@ namespace LogiG733Tray.G733.Controllers
             {
                 try
                 {
-                    await Task.Delay(
-                        Config.Instance.PwrButtonConfig.DoubleClickDelayMs,
-                        token);
+                    await Task.Delay(Config.Instance.PwrButtonConfig.DoubleClickDelayMs, token);
 
                     if (token.IsCancellationRequested)
                         return;
@@ -34,7 +32,6 @@ namespace LogiG733Tray.G733.Controllers
 
                     switch (clickCount)
                     {
-                        await HandleSingleClickAsync();
                         case 1:
                             await HandleSingleClickAsync();
                             break;
