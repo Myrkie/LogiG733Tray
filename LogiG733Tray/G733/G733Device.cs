@@ -10,6 +10,7 @@ namespace LogiG733Tray.G733
     {
         // ReSharper disable once UnusedMember.Local
         private static readonly ILogger Logger = Log.ForContext<G733Device>();
+        private static readonly bool UseBatteryVoltageTable = Config.Instance.UseBatteryVoltageTable;
         
         private const int VendorId = 0x046D; // Logi
         private static readonly int[] SupportedProductIDs = [0x0afe, 0x0ab5, 0x0b1f];
@@ -27,7 +28,7 @@ namespace LogiG733Tray.G733
             
             if (Config.Instance.PwrButtonConfig.PwrPausesMedia)
             {
-                var powerButtonController = new G733PowerButtonController(media!, Logger);
+                var powerButtonController = new G733PowerButtonController(media!);
 
                 _hid.PowerButtonPressed += powerButtonController.OnButtonPressed;
 
@@ -35,6 +36,8 @@ namespace LogiG733Tray.G733
             }
             
             Name = device!.GetProductName(GetStringFlags.None);
+
+            Logger.Information(UseBatteryVoltageTable ? "Using battery calibration table" : "Using curve mapping");
         }
         
         private void SetConnectionState(DeviceConnectionState newState)
@@ -220,17 +223,18 @@ namespace LogiG733Tray.G733
                     if (response.Length == 0)
                         return new BatteryInfo { Status = BatteryStatus.Timeout };
 
-                    Logger.Debug("Raw battery response: {Hex}", Convert.ToHexString(response));
                     ushort voltage = (ushort)((response[4] << 8) | response[5]);
                     byte state = response[6];
 
                     if (voltage != 0)
+                    {
                         return new BatteryInfo
                         {
                             Status = state == 0x03 ? BatteryStatus.Charging : BatteryStatus.Detected,
-                            Level = MapVoltageToPercent(voltage),
+                            Level = UseBatteryVoltageTable ? MapVoltageToTable(voltage) : MapVoltageToPercent(voltage),
                             VoltageMv = voltage
                         };
+                    }
                     Logger.Warning("Discarded invalid battery reading: Voltage was 0.");
                     return new BatteryInfo { Status = BatteryStatus.Timeout };
                 }
@@ -244,8 +248,6 @@ namespace LogiG733Tray.G733
         /// <summary>
         /// Map voltage in mV to percentage
         /// </summary>
-        /// <param name="voltage"></param>
-        /// <returns></returns>
         private static int MapVoltageToPercent(ushort voltage)
         {
             // my device arrived with a degraded battery so im using degraded values.
@@ -265,6 +267,44 @@ namespace LogiG733Tray.G733
             double percent = (double)(voltage - min) / (max - min);
             percent = Math.Pow(percent, 1.7);
             return (int)(percent * 100);
+        }
+        
+        private static readonly int[] G733Percentages =
+        [
+            100, 80, 60, 40, 20, 10, 5, 0
+        ];
+        private static readonly int[] G733Voltages =
+        [
+            3990, 3870, 3800, 3725, 3690, 3659, 3530, 3500
+        ];
+        
+        /// <summary>
+        /// Map voltage in mV to percentage using a battery calibration table.
+        /// </summary>
+        private static int MapVoltageToTable(ushort voltage)
+        {
+            if (voltage >= G733Voltages[0])
+                return G733Percentages[0];
+
+            if (voltage <= G733Voltages[^1])
+                return G733Percentages[^1];
+
+            for (int i = 0; i < G733Voltages.Length - 1; i++)
+            {
+                int highVoltage = G733Voltages[i];
+                int lowVoltage = G733Voltages[i + 1];
+
+                if (voltage <= highVoltage && voltage >= lowVoltage)
+                {
+                    int highPercent = G733Percentages[i];
+                    int lowPercent = G733Percentages[i + 1];
+
+                    double fraction = (double)(voltage - lowVoltage) / (highVoltage - lowVoltage);
+
+                    return (int)Math.Round(lowPercent + (highPercent - lowPercent) * fraction);
+                }
+            }
+            return 0;
         }
     }
     public enum BatteryStatus

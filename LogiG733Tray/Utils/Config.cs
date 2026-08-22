@@ -39,6 +39,7 @@ namespace LogiG733Tray.Utils
         private static readonly string ConfigPath = Path.Combine(AppContext.BaseDirectory, "Config" ,"config.json");
         public static Config Instance { get; } = LoadConfig();
         public bool DebugMode { get; set; }
+        public bool UseBatteryVoltageTable { get; set; }
         public OnConnectConfig OnConnectConfig { get; set; } = new();
         public PwrButtonConfig PwrButtonConfig { get; set; } = new();
         public ApiConfig ApiConfig { get; set; } = new();

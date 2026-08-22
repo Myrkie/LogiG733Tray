@@ -4,8 +4,10 @@ using Serilog;
 
 namespace LogiG733Tray.G733.Controllers
 {
-    public sealed class G733PowerButtonController(WinMediaControl media, ILogger logger) : IDisposable
+    public sealed class G733PowerButtonController(WinMediaControl media) : IDisposable
     {
+        private static readonly ILogger Logger = Log.ForContext<G733PowerButtonController>();
+        
         private CancellationTokenSource? _clickCts;
         private int _clickCount;
         public void OnButtonPressed()
@@ -57,14 +59,16 @@ namespace LogiG733Tray.G733.Controllers
             var name = await media.GetCurrentMediaNameAsync();
             await media.TogglePlayPauseAsync();
 
-            logger.Debug("Toggling {Media}", name);
+            Logger.Debug("Toggling {Media}", name);
         }
 
         private async Task HandleDoubleClickAsync()
         {
             var name = await media.SelectNextSession();
 
-            logger.Debug("Changing session to {Media}", name);
+            Logger.Debug("Changing session to {Media}", name);
+        }
+
         }
 
         public void Dispose()

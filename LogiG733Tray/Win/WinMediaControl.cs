@@ -143,7 +143,7 @@ namespace LogiG733Tray.Win
             return props?.Title;
         }
         
-        public Task<string> GetCurrentSessionNameAsync()
+        public Task<string?> GetCurrentSessionNameAsync()
         {
             var session = GetFocusedSession();
             if (session == null)
@@ -156,11 +156,11 @@ namespace LogiG733Tray.Win
 
             var exeMatch = AppNameRegex().Match(appId);
             if (exeMatch.Success)
-                return Task.FromResult(exeMatch.Groups[1].Value);
+                return Task.FromResult<string?>(exeMatch.Groups[1].Value);
 
             var cleaned = appId.Split('!').LastOrDefault();
 
-            return Task.FromResult(!string.IsNullOrWhiteSpace(cleaned) ? cleaned : appId);
+            return Task.FromResult<string?>(!string.IsNullOrWhiteSpace(cleaned) ? cleaned : appId);
         }
         
         public async Task<string?> GetCurrentMediaNameAsync()
@@ -170,7 +170,7 @@ namespace LogiG733Tray.Win
                 return null;
 
             var props = await session.TryGetMediaPropertiesAsync();
-            return props?.Title;
+            return props.Title;
         }
 
         [GeneratedRegex(@"([^\\/:*?""<>|]+)\.exe", RegexOptions.IgnoreCase, "en-US")]
