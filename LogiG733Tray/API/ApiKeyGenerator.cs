@@ -1,6 +1,7 @@
 ﻿using Microsoft.Win32;
 using System.Security.Cryptography;
 using System.Text;
+using LogiG733Tray.Utils;
 
 namespace LogiG733Tray.API
 {
@@ -14,7 +15,7 @@ namespace LogiG733Tray.API
         private static string GenerateApiKey()
         {
             var machineGuid = GetMachineGuid();
-            var apiKey = ComputeSha256Hash($"LogiTrayControl{machineGuid}");
+            var apiKey = ComputeSha256Hash($"{Constants.AppNameAlt}{machineGuid}");
             return ComputeSha256Hash(apiKey)[..30];
         }
 

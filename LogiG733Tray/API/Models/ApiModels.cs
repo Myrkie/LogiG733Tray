@@ -21,7 +21,7 @@ namespace LogiG733Tray.API.Models
         [property: JsonPropertyName("battery")] BatteryInfo? Battery
     );
     public record MediaResponse(
-        [property: JsonPropertyName("session")] string Session,
+        [property: JsonPropertyName("session")] string? Session,
         [property: JsonPropertyName("media")] string Media,
         [property: JsonPropertyName("display")] string Display
     );

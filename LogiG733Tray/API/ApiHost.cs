@@ -39,8 +39,18 @@ namespace LogiG733Tray.API
             _app.Use(async (ctx, next) =>
             {
                 var apiKeyValid = ctx.Request.Headers["X-Api-Key"] == ApiKeyGenerator.GetApiKey();
-                var userAgentValid = ctx.Request.Headers.UserAgent == "LogiTrayControl";
+                var userAgentValid = ctx.Request.Headers.UserAgent == Constants.AppNameAlt;
 
+                if (ctx.Request.Path.Equals("/endpoints"))
+                {
+                    ctx.Response.ContentType = "text/html; charset=utf-8";
+
+                    string html = Utilities.BuildEmbeddedPage("Endpoints");
+
+                    await ctx.Response.WriteAsync(html);
+                    return;
+                }
+                
                 if (!apiKeyValid || !userAgentValid)
                 {
                     ctx.Response.StatusCode = StatusCodes.Status401Unauthorized;
@@ -83,7 +93,7 @@ namespace LogiG733Tray.API
             _app.MapPost("/powerofftime", (PowerOffRequest req) =>
             {
                 device.SetAutoPowerOff(req.Minutes);
-                return Results.Ok();
+                return Results.Ok($"Power off time set to {req.Minutes} minutes");
             });
 
             _app.MapPost("/lights", (LightRequest req) =>
@@ -110,12 +120,12 @@ namespace LogiG733Tray.API
                         return Results.BadRequest();
                 }
 
-                return Results.Ok();
+                return Results.Ok($"Set headset colors to Upper: {req.UpperR} | {req.UpperG} | {req.UpperB} - Lower: {req.LowerR} | {req.LowerG} | {req.LowerB}");
             });
             _app.MapPost("/lights/off", () =>
             {
                 device.DisableLights();
-                return Results.Ok();
+                return Results.Ok("Disabled lights");
             });
             
             if (Config.Instance.PwrButtonConfig.PwrPausesMedia)

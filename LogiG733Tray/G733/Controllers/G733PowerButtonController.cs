@@ -69,8 +69,6 @@ namespace LogiG733Tray.G733.Controllers
             Logger.Debug("Changing session to {Media}", name);
         }
 
-        }
-
         public void Dispose()
         {
             _clickCts?.Cancel();

@@ -1,0 +1,276 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LogiTrayControl API Explorer</title>
+
+    <style>
+        {{CSS}}
+    </style>
+</head>
+<body>
+
+<div class="page">
+
+    <header class="header">
+        <div>
+            <div class="eyebrow">LogiTrayControl</div>
+            <h1>API Explorer</h1>
+            <p>Test available API endpoints.</p>
+        </div>
+
+        <div class="host">
+            <span>API Host</span>
+            <code id="apiBase"></code>
+        </div>
+    </header>
+
+    <section class="auth-panel">
+        <div class="section-title">
+            <div>
+                <h2>Authentication</h2>
+                <p>Every request requires both authentication headers.</p>
+            </div>
+
+            <div id="authStatus" class="auth-status">Ready</div>
+        </div>
+
+        <div class="auth-grid">
+            <label>
+                <span>X-Api-Key</span>
+                <input id="apiKey" type="password" placeholder="Enter API key" autocomplete="off">
+            </label>
+
+            <label>
+                <span>User-Agent</span>
+                <input id="userAgent" type="text" value="LogiTrayControl" autocomplete="off">
+            </label>
+        </div>
+
+        <div class="auth-actions">
+            <button id="saveAuth" class="primary">Save Credentials</button>
+            <button id="clearAuth" class="secondary">Clear</button>
+        </div>
+
+        <div class="notice">Credentials are stored only in this browser's session storage.</div>
+    </section>
+
+    <main>
+
+        <section class="endpoint-card" data-method="GET" data-path="/status">
+            <div class="endpoint-header">
+                <div class="endpoint-info">
+                    <span class="method get">GET</span>
+                    <code>/status</code>
+                    <p>Returns the current headset/device status and battery level.</p>
+                </div>
+
+                <button class="execute" data-action="execute">Execute</button>
+            </div>
+
+            <div class="response" hidden>
+                <div class="response-header">
+                    <span>Response</span>
+                    <span class="status-code"></span>
+                </div>
+                <pre class="response-body"></pre>
+            </div>
+        </section>
+
+        <section class="endpoint-card" data-method="GET" data-path="/powerofftime">
+            <div class="endpoint-header">
+                <div class="endpoint-info">
+                    <span class="method get">GET</span>
+                    <code>/powerofftime</code>
+                    <p>Returns the automatic power-off timeout in minutes.</p>
+                </div>
+
+                <button class="execute" data-action="execute">Execute</button>
+            </div>
+
+            <div class="response" hidden>
+                <div class="response-header">
+                    <span>Response</span>
+                    <span class="status-code"></span>
+                </div>
+                <pre class="response-body"></pre>
+            </div>
+        </section>
+
+        <section class="endpoint-card" data-method="POST" data-path="/powerofftime">
+            <div class="endpoint-header">
+                <div class="endpoint-info">
+                    <span class="method post">POST</span>
+                    <code>/powerofftime</code>
+                    <p>Sets the automatic power-off timeout.</p>
+                </div>
+
+                <button class="execute" data-action="execute">Execute</button>
+            </div>
+
+            <div class="request">
+                <div class="request-header">
+                    <span>Request Body</span>
+                    <button class="small-button" data-action="reset">Reset</button></div>
+
+<textarea class="json-editor">{
+    "minutes": 10
+}</textarea>
+            </div>
+
+            <div class="response" hidden>
+                <div class="response-header">
+                    <span>Response</span>
+                    <span class="status-code"></span>
+                </div>
+                <pre class="response-body"></pre>
+            </div>
+        </section>
+
+        <section class="endpoint-card" data-method="POST" data-path="/lights">
+            <div class="endpoint-header">
+                <div class="endpoint-info">
+                    <span class="method post">POST</span>
+                    <code>/lights</code>
+                    <p>Controls the upper, lower, or both headset light bars.</p>
+                </div>
+
+                <button class="execute" data-action="execute">Execute</button>
+            </div>
+
+            <div class="request">
+                <div class="request-header">
+                    <span>Request Body</span>
+                    <button class="small-button" data-action="reset">Reset</button>
+                </div>
+<textarea class="json-editor">{
+    "target": "both",
+    "upperR": 255,
+    "upperG": 0,
+    "upperB": 255,
+    "lowerR": 255,
+    "lowerG": 0,
+    "lowerB": 255,
+    "mode": "Static"
+}</textarea>
+            </div>
+            <div class="response" hidden>
+                <div class="response-header">
+                    <span>Response</span>
+                    <span class="status-code"></span>
+                </div>
+                <pre class="response-body"></pre>
+            </div>
+        </section>
+
+        <section class="endpoint-card" data-method="POST" data-path="/lights/off">
+            <div class="endpoint-header">
+                <div class="endpoint-info">
+                    <span class="method post">POST</span>
+                    <code>/lights/off</code>
+                    <p>Disables the headset lighting.</p>
+                </div>
+
+                <button class="execute" data-action="execute">Execute</button>
+            </div>
+
+            <div class="response" hidden>
+                <div class="response-header">
+                    <span>Response</span>
+                    <span class="status-code"></span>
+                </div>
+                <pre class="response-body"></pre>
+            </div>
+        </section>
+
+        <section class="endpoint-card" data-method="GET" data-path="/media-status">
+            <div class="endpoint-header">
+                <div class="endpoint-info">
+                    <span class="method get">GET</span>
+                    <code>/media-status</code>
+                    <p>Returns the current media session and media title.</p>
+                </div>
+
+                <button class="execute" data-action="execute">Execute</button>
+            </div>
+
+            <div class="response" hidden>
+                <div class="response-header">
+                    <span>Response</span>
+                    <span class="status-code"></span>
+                </div>
+                <pre class="response-body"></pre>
+            </div>
+        </section>
+
+        <section class="endpoint-card" data-method="POST" data-path="/media-next">
+            <div class="endpoint-header">
+                <div class="endpoint-info">
+                    <span class="method post">POST</span>
+                    <code>/media-next</code>
+                    <p>Switches to the next media session.</p>
+                </div>
+
+                <button class="execute" data-action="execute">Execute</button>
+            </div>
+
+            <div class="response" hidden>
+                <div class="response-header">
+                    <span>Response</span>
+                    <span class="status-code"></span>
+                </div>
+                <pre class="response-body"></pre>
+            </div>
+        </section>
+
+        <section class="endpoint-card" data-method="POST" data-path="/media-previous">
+            <div class="endpoint-header">
+                <div class="endpoint-info">
+                    <span class="method post">POST</span>
+                    <code>/media-previous</code>
+                    <p>Switches to the previous media session.</p>
+                </div>
+
+                <button class="execute" data-action="execute">Execute</button>
+            </div>
+
+            <div class="response" hidden>
+                <div class="response-header">
+                    <span>Response</span>
+                    <span class="status-code"></span>
+                </div>
+                <pre class="response-body"></pre>
+            </div>
+        </section>
+
+        <section class="endpoint-card" data-method="GET" data-path="/media-pwr">
+            <div class="endpoint-header">
+                <div class="endpoint-info">
+                    <span class="method get">GET</span>
+                    <code>/media-pwr</code>
+                    <p>Returns whether the power button is configured to pause media.</p>
+                </div>
+
+                <button class="execute" data-action="execute">Execute</button>
+            </div>
+
+            <div class="response" hidden>
+                <div class="response-header">
+                    <span>Response</span>
+                    <span class="status-code"></span>
+                </div>
+                <pre class="response-body"></pre>
+            </div>
+        </section>
+
+    </main>
+
+</div>
+
+<script>
+    {{JS}}
+</script>
+
+</body>
+</html>

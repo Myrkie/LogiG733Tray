@@ -37,7 +37,15 @@ namespace LogiG733Tray.G733
             
             Name = device!.GetProductName(GetStringFlags.None);
 
-            Logger.Information(UseBatteryVoltageTable ? "Using battery calibration table" : "Using curve mapping");
+            switch (UseBatteryVoltageTable)
+            {
+                case true:
+                    Logger.Information("Using battery calibration table");
+                    break;
+                default:
+                    Logger.Information("Using curve mapping");
+                    break;
+            }
         }
         
         private void SetConnectionState(DeviceConnectionState newState)
@@ -76,7 +84,7 @@ namespace LogiG733Tray.G733
 
             foreach (var d in devices)
             {
-                Logger.Debug("HID: VID={VID:X4} PID={PID:X4} Path={Path}",
+                Logger.Debug("HID: VID={Vid} PID={Pid} Path={Path}",
                     d.VendorID,
                     d.ProductID,
                     d.DevicePath);
@@ -89,7 +97,7 @@ namespace LogiG733Tray.G733
 
                 _cachedDevice = g733;
 
-                Logger.Debug("Selected device: VID={VID:X4} PID={PID:X4} Path={Path}",
+                Logger.Debug("Selected device: VID={Vid} PID={Pid} Path={Path}",
                     d.VendorID,
                     d.ProductID,
                     d.DevicePath);
@@ -235,7 +243,7 @@ namespace LogiG733Tray.G733
                             VoltageMv = voltage
                         };
                     }
-                    Logger.Warning("Discarded invalid battery reading: Voltage was 0.");
+                    Logger.Warning("Discarded invalid battery reading: Voltage was 0");
                     return new BatteryInfo { Status = BatteryStatus.Timeout };
                 }
                 catch

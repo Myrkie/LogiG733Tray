@@ -8,7 +8,6 @@ namespace LogiG733Tray.Utils
     public static partial class Utilities
     {
         private static readonly ILogger Logger = Log.ForContext(typeof(Utilities));
-        private const string AppName = "LogiG733Tray";
         // ReSharper disable once NotAccessedField.Local
         private static Mutex _mutex = null!;
         private const int LowBatteryThreshold = 15;
@@ -22,11 +21,11 @@ namespace LogiG733Tray.Utils
         internal static void SingleInstanceCheck()
         {
             Thread.Sleep(2000); // let's wait a bit to let any previous ones close before checking.
-            _mutex = new Mutex(true, AppName, out var createdNew);
+            _mutex = new Mutex(true, Constants.AppName, out var createdNew);
             if (createdNew) return;
-            var str = AppName + " is already running.";
-            Logger.Information(str);
-            MessageBox.Show(str, AppName);
+            const string appName = Constants.AppName + " is already running";
+            Logger.Information("{AppName}", appName);
+            MessageBox.Show(appName, Constants.AppName);
             Environment.Exit(0);
         }
         
@@ -64,7 +63,7 @@ namespace LogiG733Tray.Utils
             if (IconCache.TryGetValue(key, out var cached))
                 return (Icon)cached.Clone();
             
-            Logger.Debug("Icon Cache Missed, Creating battery icon for lv {lv} of state {stat}", level, status);
+            Logger.Debug("Icon Cache Missed, Creating battery icon for lv {Lv} of state {Stat}", level, status);
             
             using var bmp = new Bitmap(16, 16);
             using (var g = Graphics.FromImage(bmp))
@@ -137,10 +136,11 @@ namespace LogiG733Tray.Utils
             // ReSharper disable twice NullCoalescingConditionIsAlwaysNotNullAccordingToAPIContract
             string css = ReadEmbeddedResource($"Pages.{pageName}.css") ?? "";
             string js  = ReadEmbeddedResource($"Pages.{pageName}.js") ?? "";
+            string utilJs = ReadEmbeddedResource("Pages.Util.js") ?? "";
 
             return html
                 .Replace("{{CSS}}", css)
-                .Replace("{{JS}}", js);
+                .Replace("{{JS}}", utilJs + "\n" + js);
         }
 
         private static string ReadEmbeddedResource(string logicalName)

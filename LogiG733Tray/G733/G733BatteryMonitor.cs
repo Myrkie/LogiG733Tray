@@ -29,12 +29,12 @@ namespace LogiG733Tray.G733
                 var battery = _device?.GetBatteryInfo();
                 if (_lastStatus != BatteryStatus.Charging && battery?.Status == BatteryStatus.Charging)
                 {
-                    Logger.Debug("Battery Status changed to Charging. Level: {level} | Voltage: {voltage}", battery.Level, battery.VoltageMv);
+                    Logger.Debug("Battery Status changed to Charging. Level: {Level} | Voltage: {Voltage}", battery.Level, battery.VoltageMv);
                 }
                 
                 if (_lastStatus == BatteryStatus.Charging && battery?.Status != BatteryStatus.Charging)
                 {
-                    Logger.Debug("Battery Status changed to Discharging. Level: {level} | Voltage: {voltage}", battery?.Level, battery?.VoltageMv);
+                    Logger.Debug("Battery Status changed to Discharging. Level: {Level} | Voltage: {Voltage}", battery?.Level, battery?.VoltageMv);
                 }
                 _lastStatus = battery?.Status;
                 

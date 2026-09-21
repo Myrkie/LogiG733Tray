@@ -81,14 +81,15 @@ namespace LogiG733Tray.Win
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Failed OnLoad: {ex.Message}", "Error",
-                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+                var exceptionMessage = $"{ex.Message} {Environment.NewLine} {ex.StackTrace}";
+                Logger.Fatal("Failed OnLoad refresh of MediaUI: {ExceptionMessage}", exceptionMessage);
+                MessageBox.Show($"Failed OnLoad refresh of MediaUI: {exceptionMessage}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
         
         private void InitializeComponents()
         {
-            Text = "LogiTray Control";
+            Text = Constants.AppNameAltSpaced;
             int height = 365;
 
             if (_apiEnabled)
