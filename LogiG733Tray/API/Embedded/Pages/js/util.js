@@ -1,36 +1,13 @@
 ﻿const util = {
     async copyText(text, element) {
         try {
-            const copyValue =
-                element.dataset.originalText ?? text;
+            const copyValue = element.dataset.originalText ?? text;
 
-            if (navigator.clipboard?.writeText) {
-                await navigator.clipboard.writeText(copyValue);
-            } else {
-                util.fallbackCopy(copyValue);
-            }
+            await navigator.clipboard.writeText(copyValue);
 
             util.flashCopied(element);
-
         } catch (error) {
             console.error('Copy failed:', error);
-        }
-    },
-
-    fallbackCopy(text) {
-        const textarea = document.createElement('textarea');
-
-        textarea.value = text;
-        textarea.style.position = 'fixed';
-        textarea.style.left = '-9999px';
-
-        document.body.appendChild(textarea);
-        textarea.select();
-
-        try {
-            document.execCommand('copy');
-        } finally {
-            document.body.removeChild(textarea);
         }
     },
 

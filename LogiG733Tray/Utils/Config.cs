@@ -31,6 +31,7 @@ namespace LogiG733Tray.Utils
     public class ApiConfig
     {
         public bool InitializeApi { get; set; }
+        public bool IsHttps { get; set; }
         public int Port { get; set; } = 5180;
     }
     [Serializable]
@@ -44,14 +45,12 @@ namespace LogiG733Tray.Utils
         public PwrButtonConfig PwrButtonConfig { get; set; } = new();
         public ApiConfig ApiConfig { get; set; } = new();
 
-        static Config LoadConfig()
+        private static Config LoadConfig()
         {
             Config? cfg = File.Exists(ConfigPath) ? JsonSerializer.Deserialize(File.ReadAllText(ConfigPath), ConfigSourceGenerationContext.Default.Config) : null;
-            if(cfg == null)
-            {
-                cfg = new Config();
-                cfg.SaveConfig();
-            }
+            if (cfg != null) return cfg;
+            cfg = new Config();
+            cfg.SaveConfig();
             return cfg;
         }
 

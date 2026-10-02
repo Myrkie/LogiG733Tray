@@ -1,10 +1,13 @@
 ﻿using System.Text.RegularExpressions;
 using Windows.Media.Control;
+using Serilog;
 
 namespace LogiG733Tray.Win
 {
     public partial class WinMediaControl
     {
+        private static readonly ILogger Logger = Log.ForContext<WinMediaControl>();
+        
         private GlobalSystemMediaTransportControlsSessionManager? _manager;
         private GlobalSystemMediaTransportControlsSession? _selectedSession;
         public event Action? MediaChanged;
@@ -139,8 +142,17 @@ namespace LogiG733Tray.Win
             if (session == null)
                 return null;
 
-            var props = await session.TryGetMediaPropertiesAsync();
-            return props?.Title;
+            try
+            {
+                var props = await session.TryGetMediaPropertiesAsync();
+                return props?.Title;
+            }
+            catch (Exception ex)
+            {
+                Logger.Warning(ex, "Failed to get session media properties");
+
+                return null;
+            }
         }
         
         public Task<string?> GetCurrentSessionNameAsync()
@@ -166,11 +178,20 @@ namespace LogiG733Tray.Win
         public async Task<string?> GetCurrentMediaNameAsync()
         {
             var session = GetFocusedSession();
+
             if (session == null)
                 return null;
 
-            var props = await session.TryGetMediaPropertiesAsync();
-            return props.Title;
+            try
+            {
+                var props = await session.TryGetMediaPropertiesAsync();
+                return props?.Title;
+            }
+            catch (Exception ex)
+            {
+                Logger.Warning(ex, "Failed to get media properties for session {SourceAppUserModelId}", session.SourceAppUserModelId);
+                return null;
+            }
         }
 
         [GeneratedRegex(@"([^\\/:*?""<>|]+)\.exe", RegexOptions.IgnoreCase, "en-US")]

@@ -293,11 +293,24 @@ namespace LogiTrayAndroid
                 StopRefreshLoop();
                 return false;
             }
-            catch (HttpRequestException ex)
+            catch (HttpService.CertificateValidationException validationException)
             {
                 RunOnUiThread(() =>
                 {
-                    Toast.MakeText(this, $"Failed to connect to {ex.Message}, check that LogiG733Tray is running",
+                    Toast.MakeText(this, "Certificate error: the server certificate is not trusted", 
+                        ToastLength.Long)?.Show();
+                });
+
+                Logger.Error("Server certificate validation failed, install the generated ca.pem", validationException);
+
+                StopRefreshLoop();
+                return false;
+            }
+            catch (HttpRequestException httpRequestException)
+            {
+                RunOnUiThread(() =>
+                {
+                    Toast.MakeText(this, $"Failed to connect to {httpRequestException.Message}, check that LogiG733Tray is running",
                         ToastLength.Short)?.Show();
                 });
                 StopRefreshLoop();

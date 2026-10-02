@@ -339,7 +339,12 @@ namespace LogiG733Tray.Win
                 Dock = DockStyle.Fill,
                 TextAlign = ContentAlignment.TopRight
             };
-
+            
+            if (Config.Instance.ApiConfig.IsHttps)
+            {
+                _lblLocalIp.Text = $"https://{Utilities.GetLocalIp()}:{Config.Instance.ApiConfig.Port}";
+            }
+            
             footerLayout.Controls.Add(apiHeader, 0, 0);
             footerLayout.Controls.Add(hintLabel, 1, 0);
             footerLayout.Controls.Add(ipHeader, 2, 0);

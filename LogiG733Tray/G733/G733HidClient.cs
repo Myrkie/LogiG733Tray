@@ -251,11 +251,10 @@ namespace LogiG733Tray.G733
 
             byte[] command = new byte[HidppLongMessageLength];
             command[0] = 0x11; // HIDPP_LONG_MESSAGE
-            command[1] = 0xFF; // Device Receiver (host)
+            command[1] = 0xFF; // Device Receiver
             command[2] = 0x08; // Battery / power function
             command[3] = 0x12; // Subcommand: Get Auto Power-Off
 
-            // Fill remaining bytes with 0
             for (int i = 4; i < HidppLongMessageLength; i++)
                 command[i] = 0x00;
 
@@ -286,9 +285,9 @@ namespace LogiG733Tray.G733
             for (int i = 0; i < command.Length; i++)
                 command[i] = 0x00;
 
-            command[0] = 0x11;      // Report ID (HIDPP_LONG_MESSAGE)
-            command[1] = 0xFF;      // Receiver = host
-            command[2] = 0x08;      // Battery / Power function
+            command[0] = 0x11;      // HIDPP_LONG_MESSAGE
+            command[1] = 0xFF;      // Device Receiver
+            command[2] = 0x08;      // Battery / power function
             command[3] = 0x2A;      // Subcommand: Set Auto Power-Off
             command[4] = value;
 

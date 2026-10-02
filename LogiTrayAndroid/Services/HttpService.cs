@@ -8,22 +8,43 @@ namespace LogiTrayAndroid.Services
     {
         private HttpClient? _client;
         public bool IsConnected => _client != null;
+
         private string _apiKey = "";
-        private string _ipAddress = "";
 
         public void SetConnection(string? ip, string? apiKey)
         {
             if (string.IsNullOrWhiteSpace(ip))
                 throw new ArgumentException("IP address cannot be empty", nameof(ip));
 
-            _ipAddress = ip;
-            _apiKey = apiKey!;
+            if (string.IsNullOrWhiteSpace(apiKey))
+                throw new ArgumentException("API key cannot be empty", nameof(apiKey));
+
+            var address = ip.Trim();
+
+            if (!address.StartsWith("http://", StringComparison.OrdinalIgnoreCase) &&
+                !address.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
+            {
+                address = $"http://{address}";
+            }
+
+            if (!Uri.TryCreate(address, UriKind.Absolute, out var baseUri) ||
+                (baseUri.Scheme != Uri.UriSchemeHttp &&
+                 baseUri.Scheme != Uri.UriSchemeHttps))
+            {
+                throw new ArgumentException(
+                    "Address must be a valid HTTP or HTTPS address.",
+                    nameof(ip));
+            }
+
+            _apiKey = apiKey;
 
             _client?.Dispose();
+
             _client = new HttpClient
             {
-                BaseAddress = new Uri($"http://{_ipAddress}")
+                BaseAddress = baseUri
             };
+
             _client.DefaultRequestHeaders.Clear();
             _client.DefaultRequestHeaders.Add("X-Api-Key", _apiKey);
             _client.DefaultRequestHeaders.Add("User-Agent", "LogiTrayControl");
@@ -31,33 +52,46 @@ namespace LogiTrayAndroid.Services
 
         private void EnsureClient()
         {
-            if (_client == null)
-                throw new InvalidOperationException("HttpClient not initialized. Call SetConnection first.");
+            if (_client == null) throw new InvalidOperationException("HttpClient not initialized. Call SetConnection first.");
         }
-
 
         public async Task<StatusResponse?> GetStatusAsync()
         {
             EnsureClient();
-            var response = await _client!.GetAsync("/status");
 
-            if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
-                throw new UnauthorizedException();
-            
-            if (!response.IsSuccessStatusCode)
+            try
             {
-                var text = await response.Content.ReadAsStringAsync();
-                throw new HttpRequestException(
-                    $"GetStatus failed: {(int)response.StatusCode} {response.ReasonPhrase}. {text}");
+                var response = await _client!.GetAsync("/status");
+
+                if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+                    throw new UnauthorizedException();
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    var text = await response.Content.ReadAsStringAsync();
+
+                    throw new HttpRequestException($"GetStatus failed: {(int)response.StatusCode} {response.ReasonPhrase}. {text}");
+                }
+
+                var json = await response.Content.ReadAsStringAsync();
+
+                return JsonSerializer.Deserialize(
+                    json,
+                    AppJsonContext.Default.StatusResponse);
             }
-
-            var json = await response.Content.ReadAsStringAsync();
-            return JsonSerializer.Deserialize(json, AppJsonContext.Default.StatusResponse);
+            catch (HttpRequestException ex) when (IsCertificateValidationError(ex))
+            {
+                throw new CertificateValidationException(
+                    "The server certificate could not be trusted. " +
+                    "Make sure the correct LogiG733Tray CA certificate is installed.",
+                    ex);
+            }
         }
-
+        
         public async Task<int> GetAutoPowerOffAsync()
         {
             EnsureClient();
+
             var response = await _client!.GetAsync("/powerofftime");
 
             if (!response.IsSuccessStatusCode)
@@ -68,18 +102,20 @@ namespace LogiTrayAndroid.Services
             }
 
             var json = await response.Content.ReadAsStringAsync();
-            return int.TryParse(json, out int minutes) ? minutes : throw new FormatException($"GetAutoPowerOff returned invalid data: {json}");
+
+            return int.TryParse(json, out int minutes) 
+                ? minutes : throw new FormatException($"GetAutoPowerOff returned invalid data: {json}");
         }
-        
-        
+
         public async Task<MediaResponse?> GetMediaStatusAsync()
         {
             EnsureClient();
+
             var response = await _client!.GetAsync("/media-status");
 
             if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
                 throw new UnauthorizedException();
-            
+
             if (!response.IsSuccessStatusCode)
             {
                 var text = await response.Content.ReadAsStringAsync();
@@ -88,9 +124,10 @@ namespace LogiTrayAndroid.Services
             }
 
             var json = await response.Content.ReadAsStringAsync();
+
             return JsonSerializer.Deserialize(json, AppJsonContext.Default.MediaResponse);
         }
-        
+
         public async Task GetMediaNextAsync()
         {
             EnsureClient();
@@ -111,7 +148,7 @@ namespace LogiTrayAndroid.Services
 
             JsonSerializer.Deserialize(json, AppJsonContext.Default.SessionSwitchResponse);
         }
-        
+
         public async Task GetMediaPreviousAsync()
         {
             EnsureClient();
@@ -124,15 +161,14 @@ namespace LogiTrayAndroid.Services
             if (!response.IsSuccessStatusCode)
             {
                 var text = await response.Content.ReadAsStringAsync();
-                throw new HttpRequestException(
-                    $"GetMediaPrevious failed: {(int)response.StatusCode} {response.ReasonPhrase}. {text}");
+                throw new HttpRequestException($"GetMediaPrevious failed: {(int)response.StatusCode} {response.ReasonPhrase}. {text}");
             }
 
             var json = await response.Content.ReadAsStringAsync();
 
             JsonSerializer.Deserialize(json, AppJsonContext.Default.SessionSwitchResponse);
         }
-        
+
         public async Task<SessionPowerStateResponse?> GetMediaPowerStateAsync()
         {
             EnsureClient();
@@ -145,21 +181,25 @@ namespace LogiTrayAndroid.Services
             if (!response.IsSuccessStatusCode)
             {
                 var text = await response.Content.ReadAsStringAsync();
-                throw new HttpRequestException(
-                    $"GetMediaStateAsync failed: {(int)response.StatusCode} {response.ReasonPhrase}. {text}");
+                throw new HttpRequestException($"GetMediaStateAsync failed: {(int)response.StatusCode} {response.ReasonPhrase}. {text}");
             }
 
             var json = await response.Content.ReadAsStringAsync();
 
             return JsonSerializer.Deserialize(json, AppJsonContext.Default.SessionPowerStateResponse);
         }
-        
-        
+
         public async Task SetAutoPowerOffAsync(int minutes)
         {
             EnsureClient();
-            var payload = new SetAutoPowerOffRequest { Minutes = minutes };
+
+            var payload = new SetAutoPowerOffRequest
+            {
+                Minutes = minutes
+            };
+
             var json = JsonSerializer.Serialize(payload, AppJsonContext.Default.SetAutoPowerOffRequest);
+
             var content = new StringContent(json, Encoding.UTF8, "application/json");
 
             var response = await _client!.PostAsync("/powerofftime", content);
@@ -167,24 +207,28 @@ namespace LogiTrayAndroid.Services
             if (!response.IsSuccessStatusCode)
             {
                 var text = await response.Content.ReadAsStringAsync();
-                throw new HttpRequestException(
-                    $"SetAutoPowerOff failed: {(int)response.StatusCode} {response.ReasonPhrase}. {text}");
+                throw new HttpRequestException($"SetAutoPowerOff failed: {(int)response.StatusCode} {response.ReasonPhrase}. {text}");
             }
         }
 
         public async Task SetLightAsync(string target, int r, int g, int b, LightMode mode = LightMode.Static)
         {
             EnsureClient();
-            
+
             var payload = new SetLightRequest
             {
                 Target = target,
-                UpperR = r, UpperG = g, UpperB = b,
-                LowerR = r, LowerG = g, LowerB = b,
+                UpperR = r,
+                UpperG = g,
+                UpperB = b,
+                LowerR = r,
+                LowerG = g,
+                LowerB = b,
                 Mode = mode
             };
 
             var json = JsonSerializer.Serialize(payload, AppJsonContext.Default.SetLightRequest);
+
             var content = new StringContent(json, Encoding.UTF8, "application/json");
 
             var response = await _client!.PostAsync("/lights", content);
@@ -200,6 +244,7 @@ namespace LogiTrayAndroid.Services
         public async Task TurnOffLightsAsync()
         {
             EnsureClient();
+
             var response = await _client!.PostAsync("/lights/off", null);
 
             if (!response.IsSuccessStatusCode)
@@ -209,7 +254,33 @@ namespace LogiTrayAndroid.Services
                     $"TurnOffLights failed: {(int)response.StatusCode} {response.ReasonPhrase}. {text}");
             }
         }
+
+        private static bool IsCertificateValidationError(Exception ex)
+        {
+            for (var current = ex; current != null; current = current.InnerException)
+            {
+                if (current.Message.Contains("Trust anchor for certification path not found", StringComparison.OrdinalIgnoreCase))
+                {
+                    return true;
+                }
+
+                if (current.Message.Contains("CertPathValidatorException", StringComparison.OrdinalIgnoreCase))
+                {
+                    return true;
+                }
+
+                if (current.Message.Contains("CertificateException", StringComparison.OrdinalIgnoreCase))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
         
+        public class CertificateValidationException(string message, Exception? inner = null)
+            : Exception(message, inner);
+
         public class UnauthorizedException() : Exception("Unauthorized: API key is invalid");
     }
 }

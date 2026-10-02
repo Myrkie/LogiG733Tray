@@ -258,9 +258,6 @@ namespace LogiG733Tray.G733
         /// </summary>
         private static int MapVoltageToPercent(ushort voltage)
         {
-            // my device arrived with a degraded battery so im using degraded values.
-            // I don't want to have to make a battery map I am not at all experience with battery technology.
-            // I also don't want to have to continue to have the awful Ghub software remaining on my machine to continue reverse engineering.
             const int max = 3990;
             const int min = 3500;
 

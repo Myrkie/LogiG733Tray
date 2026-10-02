@@ -167,13 +167,11 @@ namespace LogiG733Tray
                         {
                             deviceItem.Text = $"Device: {_g733.Name}";
                             batteryItem.Text =
-                                $"Battery: {battery.Level}% ({(battery.Status == BatteryStatus.Charging ? "Charging" : battery.Status.ToString())})";
-                            batteryItemMv.Text =
-                                $"Battery Voltage: {battery.VoltageMv} mV";
+                                $"Battery: {battery.Level}% ({(battery.Status == BatteryStatus.Charging 
+                                    ? "Charging" : battery.Status.ToString())})";
+                            batteryItemMv.Text = $"Battery Voltage: {battery.VoltageMv} mV";
 
-                            _notifyIcon.Icon = Utilities.CreateBatteryIcon(
-                                    battery.Level,
-                                    battery.Status);
+                            _notifyIcon.Icon = Utilities.CreateBatteryIcon(battery.Level, battery.Status);
                         }
                         break;
                 }

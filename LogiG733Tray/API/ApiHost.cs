@@ -1,4 +1,5 @@
-﻿using LogiG733Tray.API.Models;
+﻿using System.Net;
+using LogiG733Tray.API.Models;
 using LogiG733Tray.G733;
 using LogiG733Tray.Utils;
 using LogiG733Tray.Win;
@@ -13,6 +14,7 @@ namespace LogiG733Tray.API
     public class ApiHost(G733Device device, G733BatteryMonitor batteryMonitor, WinMediaControl? media) : IDisposable
     {
         private WebApplication? _app;
+        private static readonly bool IsHttps = Config.Instance.ApiConfig.IsHttps;
 
         public void Dispose()
         {
@@ -20,6 +22,7 @@ namespace LogiG733Tray.API
             _app.DisposeAsync().AsTask().GetAwaiter().GetResult();
             _app = null;
         }
+
         public void Start()
         {
             var builder = WebApplication.CreateBuilder();
@@ -28,10 +31,28 @@ namespace LogiG733Tray.API
                 options.SerializerOptions.TypeInfoResolverChain.Insert(0, ApiJsonContext.Default);
             });
 
-            var localip = Utilities.GetLocalIp();
-            var localport = Config.Instance.ApiConfig.Port;
+            var localIp = Utilities.GetLocalIp();
+            var localPort = Config.Instance.ApiConfig.Port;
+            if (!IsHttps)
+            {
+                builder.WebHost.ConfigureKestrel(options =>
+                {
+                    options.Listen(IPAddress.Parse(localIp), localPort);
+                });
+            }
+            else
+            {
+                var certificate = CertificateUtils.GetOrCreateServerCertificate(localIp);
 
-            builder.WebHost.UseUrls($"http://{localip}:{localport}");
+                builder.WebHost.ConfigureKestrel(options =>
+                {
+                    options.Listen(IPAddress.Parse(localIp), localPort, listenOptions =>
+                        {
+                            listenOptions.UseHttps(certificate);
+                        });
+                });
+            }
+            
             builder.Host.UseSerilog();
             
             _app = builder.Build();
