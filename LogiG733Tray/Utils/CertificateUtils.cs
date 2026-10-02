@@ -185,7 +185,8 @@ namespace LogiG733Tray.Utils
 
         private static void InstallCaCertificate(X509Certificate2 ca)
         {
-            using var publicCertificate = X509CertificateLoader.LoadCertificate(ca.Export(X509ContentType.Cert));
+            using var publicCertificate =
+                X509CertificateLoader.LoadCertificate(ca.Export(X509ContentType.Cert));
 
             using var store = new X509Store(StoreName.Root, StoreLocation.CurrentUser);
 
@@ -199,6 +200,8 @@ namespace LogiG733Tray.Utils
                 X509FindType.FindBySubjectDistinguishedName,
                 ca.Subject, validOnly: false);
 
+            var currentInstalled = false;
+
             foreach (var certificate in existing)
             {
                 if (string.Equals(certificate.Thumbprint, ca.Thumbprint, StringComparison.OrdinalIgnoreCase))
@@ -206,95 +209,33 @@ namespace LogiG733Tray.Utils
                     Logger.Information("Current CA certificate is already installed. Thumbprint: {Thumbprint}",
                         certificate.Thumbprint);
 
-                    certificate.Dispose();
-                    continue;
+                    currentInstalled = true;
                 }
+                else
+                {
+                    Logger.Information("Removing old CA certificate. Thumbprint: {Thumbprint}",
+                        certificate.Thumbprint);
 
-                Logger.Information("Removing old CA certificate. Thumbprint: {Thumbprint}",
-                    certificate.Thumbprint);
-
-                store.Remove(certificate);
+                    store.Remove(certificate);
+                }
 
                 certificate.Dispose();
             }
 
-            var current = store.Certificates.Find(X509FindType.FindByThumbprint,
-                ca.Thumbprint, validOnly: false);
-
-            if (current.Count != 0)
+            if (currentInstalled)
             {
-                Logger.Information(
-                    "Current CA certificate is installed. No installation required. Thumbprint: {Thumbprint}",
-                    ca.Thumbprint);
-
                 return;
             }
 
-            Logger.Information(
-                "Current CA certificate is not installed. Installing it. Thumbprint: {Thumbprint}",
+            Logger.Information("Current CA certificate is not installed. Installing it. Thumbprint: {Thumbprint}",
                 ca.Thumbprint);
 
             store.Add(publicCertificate);
 
-            Logger.Information(
-                "Successfully installed CA certificate. Thumbprint: {Thumbprint}",
+            Logger.Information("Successfully installed CA certificate. Thumbprint: {Thumbprint}",
                 ca.Thumbprint);
         }
         
-        public static void RemoveCaCertificate()
-        {
-            if (!File.Exists(CaPath))
-            {
-                Logger.Information("CA certificate file does not exist: {Path}", CaPath);
-                return;
-            }
-
-            using var ca = LoadCertificate(CaPath);
-
-            RemoveInstalledCaCertificates(ca);
-        }
-        
-        private static void RemoveInstalledCaCertificates(X509Certificate2 ca)
-        {
-            using var store = new X509Store(StoreName.Root, StoreLocation.CurrentUser);
-
-            store.Open(OpenFlags.ReadWrite);
-
-            Logger.Information("Removing installed CA certificates for {Subject}", ca.Subject);
-
-            var certificates = store.Certificates.Find(X509FindType.FindBySubjectDistinguishedName,
-                ca.Subject, validOnly: false);
-
-            foreach (var certificate in certificates)
-            {
-                try
-                {
-                    Logger.Information("Removing CA certificate. Thumbprint: {Thumbprint}",
-                        certificate.Thumbprint);
-
-                    store.Remove(certificate);
-
-                    Logger.Information("Successfully removed CA certificate. Thumbprint: {Thumbprint}",
-                        certificate.Thumbprint);
-                }
-                catch (Exception ex)
-                {
-                    Logger.Error(ex, "Failed to remove CA certificate. Thumbprint: {Thumbprint}",
-                        certificate.Thumbprint);
-                }
-                finally
-                {
-                    certificate.Dispose();
-                }
-            }
-
-            if (certificates.Count == 0)
-            {
-                Logger.Information("No installed CA certificate found for {Subject}",
-                    ca.Subject);
-            }
-        }
-
         private static bool CertificateMatchesIp(X509Certificate2 certificate, string ipAddress)
         {
             if (!IPAddress.TryParse(ipAddress, out var expectedIp))
