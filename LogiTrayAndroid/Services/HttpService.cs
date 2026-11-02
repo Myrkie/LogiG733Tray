@@ -44,9 +44,7 @@ namespace LogiTrayAndroid.Services
             if (string.IsNullOrWhiteSpace(apiKey))
                 throw new ArgumentException("API key cannot be empty.", nameof(apiKey));
 
-            var cleanApiKey = apiKey.Trim();
-
-            if (cleanApiKey.Any(char.IsControl))
+            if (apiKey.Trim().Any(char.IsControl))
                 throw new ArgumentException("API key contains an invalid control character. Copy it again without line breaks.", nameof(apiKey));
         }
 
