@@ -7,7 +7,7 @@ namespace LogiG733Tray.Win
     public partial class WinMediaControl
     {
         private static readonly ILogger Logger = Log.ForContext<WinMediaControl>();
-        
+
         private GlobalSystemMediaTransportControlsSessionManager? _manager;
         private GlobalSystemMediaTransportControlsSession? _selectedSession;
         public event Action? MediaChanged;
@@ -16,24 +16,40 @@ namespace LogiG733Tray.Win
         {
             _manager = await GlobalSystemMediaTransportControlsSessionManager.RequestAsync();
 
+            _manager.CurrentSessionChanged += Manager_CurrentSessionChanged;
+
             _selectedSession = _manager.GetCurrentSession();
 
             if (_selectedSession != null)
                 AttachSessionHandlers(_selectedSession);
         }
 
+        private void Manager_CurrentSessionChanged(GlobalSystemMediaTransportControlsSessionManager sender, CurrentSessionChangedEventArgs args)
+        {
+            var newSession = sender.GetCurrentSession();
+
+            if (_selectedSession != null)
+                DetachSessionHandlers(_selectedSession);
+
+            _selectedSession = newSession;
+
+            if (_selectedSession != null)
+                AttachSessionHandlers(_selectedSession);
+
+            MediaChanged?.Invoke();
+        }
 
         private GlobalSystemMediaTransportControlsSession? GetFocusedSession()
         {
             return _selectedSession ?? _manager?.GetCurrentSession();
         }
-        
+
         private void AttachSessionHandlers(GlobalSystemMediaTransportControlsSession session)
         {
             session.MediaPropertiesChanged += Session_MediaChanged;
             session.PlaybackInfoChanged += Session_MediaChanged;
         }
-        
+
         private void DetachSessionHandlers(GlobalSystemMediaTransportControlsSession session)
         {
             session.MediaPropertiesChanged -= Session_MediaChanged;
@@ -44,7 +60,7 @@ namespace LogiG733Tray.Win
         {
             MediaChanged?.Invoke();
         }
-        
+
         public async Task TogglePlayPauseAsync()
         {
             var session = GetFocusedSession();
@@ -136,7 +152,7 @@ namespace LogiG733Tray.Win
                 return Task.FromException<string?>(ex);
             }
         }
-        
+
         private async Task<string?> GetSessionNameAsync(GlobalSystemMediaTransportControlsSession? session)
         {
             if (session == null)
@@ -154,7 +170,7 @@ namespace LogiG733Tray.Win
                 return null;
             }
         }
-        
+
         public Task<string?> GetCurrentSessionNameAsync()
         {
             var session = GetFocusedSession();
@@ -174,7 +190,7 @@ namespace LogiG733Tray.Win
 
             return Task.FromResult<string?>(!string.IsNullOrWhiteSpace(cleaned) ? cleaned : appId);
         }
-        
+
         public async Task<string?> GetCurrentMediaNameAsync()
         {
             var session = GetFocusedSession();

@@ -6,6 +6,7 @@ using LogiG733Tray.Win;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.DependencyInjection;
 using Serilog;
 
@@ -14,11 +15,19 @@ namespace LogiG733Tray.API
     public class ApiHost(G733Device device, G733BatteryMonitor batteryMonitor, WinMediaControl? media) : IDisposable
     {
         private WebApplication? _app;
+        private IHubContext<TrayHub>? _hubContext;
         private static readonly bool IsHttps = Config.Instance.ApiConfig.IsHttps;
 
         public void Dispose()
         {
             if (_app == null) return;
+
+            device.ConnectionStateChanged -= OnConnectionStateChanged;
+            batteryMonitor.BatteryUpdated -= OnBatteryUpdated;
+
+            if (media != null)
+                media.MediaChanged -= OnMediaChanged;
+
             _app.DisposeAsync().AsTask().GetAwaiter().GetResult();
             _app = null;
         }
@@ -26,13 +35,22 @@ namespace LogiG733Tray.API
         public void Start()
         {
             var builder = WebApplication.CreateBuilder();
-            builder.Services.ConfigureHttpJsonOptions(options =>
-            {
-                options.SerializerOptions.TypeInfoResolverChain.Insert(0, ApiJsonContext.Default);
-            });
+
+            builder.Services.AddSingleton(device);
+            builder.Services.AddSingleton(batteryMonitor);
+
+            if (media != null)
+                builder.Services.AddSingleton(media);
+
+            builder.Services.AddSignalR()
+                .AddJsonProtocol(options =>
+                {
+                    options.PayloadSerializerOptions.TypeInfoResolver = ApiJsonContext.Default;
+                });
 
             var localIp = Utilities.GetLocalIp();
             var localPort = Config.Instance.ApiConfig.Port;
+
             if (!IsHttps)
             {
                 builder.WebHost.ConfigureKestrel(options =>
@@ -47,14 +65,14 @@ namespace LogiG733Tray.API
                 builder.WebHost.ConfigureKestrel(options =>
                 {
                     options.Listen(IPAddress.Parse(localIp), localPort, listenOptions =>
-                        {
-                            listenOptions.UseHttps(certificate);
-                        });
+                    {
+                        listenOptions.UseHttps(certificate);
+                    });
                 });
             }
-            
+
             builder.Host.UseSerilog();
-            
+
             _app = builder.Build();
 
             _app.Use(async (ctx, next) =>
@@ -62,146 +80,71 @@ namespace LogiG733Tray.API
                 var apiKeyValid = ctx.Request.Headers["X-Api-Key"] == ApiKeyGenerator.GetApiKey();
                 var userAgentValid = ctx.Request.Headers.UserAgent == Constants.AppNameAlt;
 
-                if (ctx.Request.Path.Equals("/endpoints"))
-                {
-                    ctx.Response.ContentType = "text/html; charset=utf-8";
-
-                    string html = Utilities.BuildEmbeddedPage("Endpoints");
-
-                    await ctx.Response.WriteAsync(html);
-                    return;
-                }
-                
                 if (!apiKeyValid || !userAgentValid)
                 {
                     ctx.Response.StatusCode = StatusCodes.Status401Unauthorized;
                     ctx.Response.ContentType = "text/html; charset=utf-8";
-
-                    string html = Utilities.BuildEmbeddedPage("Unauthorized");
-
-                    await ctx.Response.WriteAsync(html);
-
+                    await ctx.Response.WriteAsync(Utilities.BuildEmbeddedPage("Unauthorized"));
                     return;
                 }
 
                 await next();
             });
-            
-            _app.MapGet("/status", () =>
+
+            _hubContext = _app.Services.GetRequiredService<IHubContext<TrayHub>>();
+
+            device.ConnectionStateChanged += OnConnectionStateChanged;
+            batteryMonitor.BatteryUpdated += OnBatteryUpdated;
+
+            if (media != null)
+                media.MediaChanged += OnMediaChanged;
+
+            _app.MapHub<TrayHub>("/hub");
+
+            _ = _app.RunAsync();
+        }
+
+        private void OnConnectionStateChanged(DeviceConnectionState state)
+        {
+            BroadcastStatus();
+        }
+
+        private void OnBatteryUpdated(BatteryInfo? battery)
+        {
+            BroadcastStatus(battery);
+        }
+
+        private void OnMediaChanged()
+        {
+            _ = BroadcastMediaAsync();
+        }
+
+        private async Task BroadcastMediaAsync()
+        {
+            if (_hubContext == null || media == null) return;
+
+            try
             {
-                var status = new StatusResponse(device.Name, device.ConnectionState, batteryMonitor.LatestBattery);
-                return Results.Ok(status);
-            });
-            
-            _app.MapGet("/powerofftime", () =>
-            {
-                switch (device.ConnectionState)
-                {
-                    case DeviceConnectionState.HeadsetSleeping:
-                        return Results.NotFound("Device is asleep");
-                    case DeviceConnectionState.NoReceiver:
-                        return Results.NotFound("Device receiver is not connected");
-                    case DeviceConnectionState.ReceiverPresent:
-                    case DeviceConnectionState.HeadsetOnline:
-                    default:
-                    {
-                        var minutes = device.GetAutoPowerOff();
-                        return Results.Ok(minutes);
-                    }
-                }
-            });
-            
-            _app.MapPost("/powerofftime", (PowerOffRequest req) =>
-            {
-                device.SetAutoPowerOff(req.Minutes);
-                return Results.Ok($"Power off time set to {req.Minutes} minutes");
-            });
+                var session = await media.GetCurrentSessionNameAsync();
+                var mediaName = await media.GetCurrentMediaNameAsync();
 
-            _app.MapPost("/lights", (LightRequest req) =>
-            {
-                var mode = req.Mode ?? G733HidClient.LightMode.Static;
-                
-                switch (req.Target.ToLower())
-                {
-                    case "upper":
-                        device.SetUpperLightBar(new G733HidClient.RgbColor(req.UpperR ?? 0, req.UpperG ?? 0, req.UpperB ?? 0), mode);
-                        break;
+                var response = new MediaResponse(session, mediaName ?? "", $"{session} - {mediaName}");
 
-                    case "lower":
-                        device.SetLowerLightBar(new G733HidClient.RgbColor(req.LowerR ?? 0, req.LowerG ?? 0, req.LowerB ?? 0), mode);
-                        break;
-
-                    case "both":
-                        var upper = new G733HidClient.RgbColor(req.UpperR ?? 0, req.UpperG ?? 0, req.UpperB ?? 0);
-                        var lower = new G733HidClient.RgbColor(req.LowerR ?? 0, req.LowerG ?? 0, req.LowerB ?? 0);
-                        device.SetLights(upper, lower, mode);
-                        break;
-
-                    default:
-                        return Results.BadRequest();
-                }
-
-                return Results.Ok($"Set headset colors to Upper: {req.UpperR} | {req.UpperG} | {req.UpperB} - Lower: {req.LowerR} | {req.LowerG} | {req.LowerB}");
-            });
-            _app.MapPost("/lights/off", () =>
-            {
-                device.DisableLights();
-                return Results.Ok("Disabled lights");
-            });
-            
-            if (Config.Instance.PwrButtonConfig.PwrPausesMedia)
-            {
-                _app.MapGet("/media-status", async () =>
-                {
-                    var session = await media!.GetCurrentSessionNameAsync();
-                    var media1 = await media.GetCurrentMediaNameAsync();
-
-
-                    var mediaResponse = new MediaResponse(session, media1!, $"{session} - {media1}");
-                    return Results.Ok(mediaResponse);
-                });
-
-                _app.MapPost("/media-next", async () =>
-                {
-                    await media!.SelectNextSession();
-                    
-                    var session = await media!.GetCurrentSessionNameAsync();
-                    var media1 = await media.GetCurrentMediaNameAsync();
-
-                    var sessionSwitchResponse = new SessionSwitchResponse($"{session} - {media1}");
-                    
-                    return Results.Ok(sessionSwitchResponse);
-                });
-
-                _app.MapPost("/media-previous", async() =>
-                {
-                    await media!.SelectPreviousSession();
-                    
-                    var session = await media!.GetCurrentSessionNameAsync();
-                    var media1 = await media.GetCurrentMediaNameAsync();
-
-                    var sessionSwitchResponse = new SessionSwitchResponse($"{session} - {media1}");
-                    
-                    return Results.Ok(sessionSwitchResponse);
-                });
-                
-                _app.MapGet("/media-pwr", () =>
-                {
-                    try
-                    {
-                        var session = Config.Instance.PwrButtonConfig.PwrPausesMedia;
-                    
-                        var sessionStateResponse = new SessionPowerStateResponse(session);
-                        return Task.FromResult(Results.Ok(sessionStateResponse));
-                    }
-                    catch (Exception exception)
-                    {
-                        return Task.FromException<IResult>(exception);
-                    }
-                });
+                await _hubContext.Clients.All.SendAsync("MediaUpdated", response);
             }
+            catch (Exception ex)
+            {
+                Log.Warning(ex, "Failed to broadcast media update");
+            }
+        }
 
-            _app.RunAsync();
+        private void BroadcastStatus(BatteryInfo? battery = null)
+        {
+            if (_hubContext == null) return;
+
+            var status = new StatusResponse(device.Name, device.ConnectionState, battery ?? batteryMonitor.LatestBattery);
+
+            _ = _hubContext.Clients.All.SendAsync("StatusUpdated", status);
         }
     }
 }

@@ -89,7 +89,7 @@ namespace LogiG733Tray.Win
         
         private void InitializeComponents()
         {
-            Text = Constants.AppNameAltSpaced;
+            Text = Constants.AppNameAltSpacedVersioned;
             int height = 365;
 
             if (_apiEnabled)
@@ -292,7 +292,7 @@ namespace LogiG733Tray.Win
             footerLayout.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
             footerLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50));
 
-            var apiHeader = new Label
+            var apiKeyHeader = new Label
             {
                 Text = "API KEY",
                 ForeColor = UiUtilities.Muted,
@@ -315,7 +315,7 @@ namespace LogiG733Tray.Win
                 ForeColor = UiUtilities.Muted,
                 Font = UiUtilities.SegoeUi8Bold,
                 Dock = DockStyle.Fill,
-                TextAlign = ContentAlignment.MiddleRight
+                TextAlign = ContentAlignment.MiddleLeft
             };
 
             _lblApiKey = new Label
@@ -337,7 +337,7 @@ namespace LogiG733Tray.Win
                 AutoSize = true,
                 Cursor = Cursors.Hand,
                 Dock = DockStyle.Fill,
-                TextAlign = ContentAlignment.TopRight
+                TextAlign = ContentAlignment.TopLeft
             };
             
             if (Config.Instance.ApiConfig.IsHttps)
@@ -345,13 +345,13 @@ namespace LogiG733Tray.Win
                 _lblLocalIp.Text = $"https://{Utilities.GetLocalIp()}:{Config.Instance.ApiConfig.Port}";
             }
             
-            footerLayout.Controls.Add(apiHeader, 0, 0);
+            footerLayout.Controls.Add(ipHeader, 0, 0);
             footerLayout.Controls.Add(hintLabel, 1, 0);
-            footerLayout.Controls.Add(ipHeader, 2, 0);
+            footerLayout.Controls.Add(apiKeyHeader, 2, 0);
 
-            footerLayout.Controls.Add(_lblApiKey, 0, 1);
+            footerLayout.Controls.Add(_lblLocalIp, 0, 1);
             footerLayout.Controls.Add(new Label(), 1, 1);
-            footerLayout.Controls.Add(_lblLocalIp, 2, 1);
+            footerLayout.Controls.Add(_lblApiKey, 2, 1);
 
             footer.Controls.Add(footerLayout);
             if (_apiEnabled)

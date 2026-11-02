@@ -12,7 +12,7 @@
         <_SuppressWinFormsTrimError>true</_SuppressWinFormsTrimError>
         <PublishTrimmed>true</PublishTrimmed>
         <Authors>Myrkur</Authors>
-        <Version>1.2.6</Version>
+        <Version>1.2.7</Version>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
         <EnableRuntimeMarshalling>true</EnableRuntimeMarshalling>
         <PublishIISAssets>false</PublishIISAssets>
@@ -52,10 +52,6 @@
         <EmbeddedResource Include="API\Embedded\Pages\404\unauthorized.html" LogicalName="Pages.Unauthorized.html"/>
         <EmbeddedResource Include="API\Embedded\Pages\404\unauthorized.css" LogicalName="Pages.Unauthorized.css"/>
         <EmbeddedResource Include="API\Embedded\Pages\404\unauthorized.js" LogicalName="Pages.Unauthorized.js"/>
-
-        <EmbeddedResource Include="API\Embedded\Pages\endpoints\endpoints.html" LogicalName="Pages.Endpoints.html"/>
-        <EmbeddedResource Include="API\Embedded\Pages\endpoints\endpoints.css" LogicalName="Pages.Endpoints.css"/>
-        <EmbeddedResource Include="API\Embedded\Pages\endpoints\endpoints.js" LogicalName="Pages.Endpoints.js"/>
     </ItemGroup>
 
 </Project>

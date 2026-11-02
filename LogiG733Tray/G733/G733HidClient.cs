@@ -55,7 +55,7 @@ namespace LogiG733Tray.G733
                 }
                 catch (IOException ex)
                 {
-                    Logger.Warning("Device disconnected: {Message}", ex.Message);
+                    Logger.Warning(ex, "Device disconnected:");
                 }
                 catch (Exception ex)
                 {

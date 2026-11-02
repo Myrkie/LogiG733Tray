@@ -3,17 +3,17 @@ using Android.Views;
 
 namespace LogiTrayAndroid.Services
 {
-    class DarkSpinnerAdapter(ArrayAdapter<string> adapter) : BaseAdapter, ISpinnerAdapter
+    internal class DarkSpinnerAdapter(ArrayAdapter<string> adapter) : BaseAdapter, ISpinnerAdapter
     {
         public override int Count => adapter.Count;
 
-        public override Java.Lang.Object GetItem(int position) => adapter.GetItem(position);
+        public override Java.Lang.Object GetItem(int position) => adapter.GetItem(position)!;
 
         public override long GetItemId(int position) => position;
 
-        public override View GetView(int position, View convertView, ViewGroup parent)
+        public override View GetView(int position, View? convertView, ViewGroup? parent)
         {
-            var view = adapter.GetView(position, convertView, parent);
+            var view = adapter.GetView(position, convertView, parent!);
 
             if (view is not TextView tv) return view;
             tv.SetTextColor(Color.White);
@@ -23,7 +23,7 @@ namespace LogiTrayAndroid.Services
             return view;
         }
 
-        public override View GetDropDownView(int position, View convertView, ViewGroup parent)
+        public override View? GetDropDownView(int position, View? convertView, ViewGroup? parent)
         {
             var view = adapter.GetDropDownView(position, convertView, parent);
 

@@ -28,8 +28,8 @@
                     android:layout_marginBottom="12dp"/>
 
             <TextView
-                    android:id="@+id/tvNextRefresh"
-                    android:text="Next refresh in: -s"
+                    android:id="@+id/tvConnectionState"
+                    android:text="Not Connected"
                     android:textColor="#FFFFFF"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -206,23 +206,6 @@
                     android:paddingTop="12dp">
 
                 <TextView
-                        android:text="API KEY"
-                        android:textColor="#AAAAAA"
-                        android:textStyle="bold"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"/>
-                <EditText
-                        android:id="@+id/etApiKey"
-                        android:hint="Enter API Key"
-                        android:inputType="text"
-                        android:backgroundTint="#444444"
-                        android:textColor="#FFFFFF"
-                        android:textColorHint="#AAAAAA"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginBottom="6dp"/>
-
-                <TextView
                         android:text="Machine Address"
                         android:textColor="#AAAAAA"
                         android:textStyle="bold"
@@ -239,9 +222,25 @@
                         android:layout_height="wrap_content"
                         android:layout_marginBottom="12dp"/>
 
+                <TextView
+                        android:text="API KEY"
+                        android:textColor="#AAAAAA"
+                        android:textStyle="bold"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"/>
+                <EditText
+                        android:id="@+id/etApiKey"
+                        android:hint="Enter API Key"
+                        android:inputType="text"
+                        android:backgroundTint="#444444"
+                        android:textColor="#FFFFFF"
+                        android:textColorHint="#AAAAAA"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="6dp"/>
                 <Button
                         android:id="@+id/btnSetConnection"
-                        android:text="API Key - IP Apply | CONNECT"
+                        android:text="Apply and Connect"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:backgroundTint="#333333"
