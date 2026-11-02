@@ -23,6 +23,8 @@ namespace LogiTrayAndroid.Services
 
         public async Task SetConnectionAsync(string? ip, string? apiKey)
         {
+            ValidateConnectionInputs(ip, apiKey);
+
             var oldConnection = _connection;
             _connection = null;
 
@@ -34,15 +36,26 @@ namespace LogiTrayAndroid.Services
             ConnectionStateChanged?.Invoke(HubConnectionState.Disconnected);
         }
 
-        private void BuildConnection(string? ip, string? apiKey)
+        private static void ValidateConnectionInputs(string? ip, string? apiKey)
         {
             if (string.IsNullOrWhiteSpace(ip))
-                throw new ArgumentException("IP address cannot be empty", nameof(ip));
+                throw new ArgumentException("IP address cannot be empty.", nameof(ip));
 
             if (string.IsNullOrWhiteSpace(apiKey))
-                throw new ArgumentException("API key cannot be empty", nameof(apiKey));
+                throw new ArgumentException("API key cannot be empty.", nameof(apiKey));
 
-            var address = ip.Trim();
+            var cleanApiKey = apiKey.Trim();
+
+            if (cleanApiKey.Any(char.IsControl))
+                throw new ArgumentException("API key contains an invalid control character. Copy it again without line breaks.", nameof(apiKey));
+        }
+
+        private void BuildConnection(string? ip, string? apiKey)
+        {
+            ValidateConnectionInputs(ip, apiKey);
+
+            var address = ip!.Trim();
+            var cleanApiKey = apiKey!.Trim();
 
             if (!address.StartsWith("http://", StringComparison.OrdinalIgnoreCase) &&
                 !address.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
@@ -51,10 +64,10 @@ namespace LogiTrayAndroid.Services
             }
 
             if (!Uri.TryCreate(address, UriKind.Absolute, out var baseUri) ||
-                (baseUri.Scheme != Uri.UriSchemeHttp && baseUri.Scheme != Uri.UriSchemeHttps))
+                (baseUri.Scheme != Uri.UriSchemeHttp &&
+                 baseUri.Scheme != Uri.UriSchemeHttps))
             {
-                throw new ArgumentException("Address must be a valid HTTP or HTTPS address.",
-                    nameof(ip));
+                throw new ArgumentException("Address must be a valid HTTP or HTTPS address.", nameof(ip));
             }
 
             var hubUri = new Uri(baseUri, "/hub");
@@ -62,7 +75,7 @@ namespace LogiTrayAndroid.Services
             var connection = new HubConnectionBuilder()
                 .WithUrl(hubUri, options =>
                 {
-                    options.Headers.Add("X-Api-Key", apiKey);
+                    options.Headers.Add("X-Api-Key", cleanApiKey);
                     options.Headers.Add("User-Agent", "LogiTrayControl");
                 })
                 .AddJsonProtocol(options =>
@@ -70,7 +83,8 @@ namespace LogiTrayAndroid.Services
                     options.PayloadSerializerOptions.TypeInfoResolver =
                         AppJsonContext.Default;
                 })
-                .WithAutomaticReconnect().Build();
+                .WithAutomaticReconnect()
+                .Build();
 
             connection.On<StatusResponse>("StatusUpdated", status =>
             {
@@ -110,10 +124,12 @@ namespace LogiTrayAndroid.Services
 
         private HubConnection GetConnection()
         {
-            if (_connection == null)
+            var connection = _connection;
+
+            if (connection == null)
                 throw new InvalidOperationException("SignalR connection not initialized.");
 
-            return _connection.State != HubConnectionState.Connected ? throw new InvalidOperationException("SignalR is not connected.") : _connection;
+            return connection.State != HubConnectionState.Connected ? throw new InvalidOperationException("SignalR is not connected.") : connection;
         }
 
         public async Task StartAsync()
@@ -141,7 +157,8 @@ namespace LogiTrayAndroid.Services
             if (connection == null)
                 return;
 
-            await connection.StopAsync();
+            if (connection.State != HubConnectionState.Disconnected)
+                await connection.StopAsync();
         }
 
         public async Task<int> GetAutoPowerOffAsync()
