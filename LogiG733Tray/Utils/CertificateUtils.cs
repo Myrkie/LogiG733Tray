@@ -9,8 +9,7 @@ namespace LogiG733Tray.Utils
     public static class CertificateUtils
     {
         private static readonly ILogger Logger = Log.ForContext(typeof(CertificateUtils));
-    
-    
+
         private const string CaName = $"{Constants.AppName} Certificate Authority";
         private const string OuName = $"{Constants.AppName} Desktop Application";
         private const string ScName = $"{Constants.AppName} API Server Certificate";
@@ -51,10 +50,7 @@ namespace LogiG733Tray.Utils
 
             File.WriteAllBytes(ServerCertificatePath, pfx);
 
-            return X509CertificateLoader.LoadPkcs12(
-                pfx, password: null, keyStorageFlags:
-                X509KeyStorageFlags.Exportable |
-                X509KeyStorageFlags.MachineKeySet);
+            return X509CertificateLoader.LoadPkcs12(pfx, password: null, keyStorageFlags: X509KeyStorageFlags.Exportable | X509KeyStorageFlags.MachineKeySet);
         }
 
         /// <summary>
@@ -116,20 +112,16 @@ namespace LogiG733Tray.Utils
 
             var subject = new X500DistinguishedName($"CN={CaName}, O={Constants.AppName}, OU={OuName}");
 
-            var request = new CertificateRequest(subject, rsa,
-                HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
+            var request = new CertificateRequest(subject, rsa, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
 
-            request.CertificateExtensions.Add(new X509BasicConstraintsExtension(
-                certificateAuthority: true, hasPathLengthConstraint: true,
+            request.CertificateExtensions.Add(new X509BasicConstraintsExtension(certificateAuthority: true, hasPathLengthConstraint: true,
                 pathLengthConstraint: 0, critical: true));
 
-            request.CertificateExtensions.Add(new X509KeyUsageExtension(
-                X509KeyUsageFlags.KeyCertSign | X509KeyUsageFlags.CrlSign, critical: true));
+            request.CertificateExtensions.Add(new X509KeyUsageExtension(X509KeyUsageFlags.KeyCertSign | X509KeyUsageFlags.CrlSign, critical: true));
 
             request.CertificateExtensions.Add(new X509SubjectKeyIdentifierExtension(request.PublicKey, critical: false));
 
-            return request.CreateSelfSigned(DateTimeOffset.UtcNow.AddMinutes(-5),
-                DateTimeOffset.UtcNow.AddYears(10));
+            return request.CreateSelfSigned(DateTimeOffset.UtcNow.AddMinutes(-5), DateTimeOffset.UtcNow.AddYears(10));
         }
 
         private static X509Certificate2 CreateServerCertificate(X509Certificate2 ca, string ipAddress)
@@ -138,16 +130,12 @@ namespace LogiG733Tray.Utils
 
             var subject = new X500DistinguishedName($"CN={ipAddress}, O={Constants.AppName}, OU={OuName}");
 
-            var request = new CertificateRequest(subject, rsa,
-                HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
+            var request = new CertificateRequest(subject, rsa, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
 
-            request.CertificateExtensions.Add(new X509BasicConstraintsExtension(
-                certificateAuthority: false, hasPathLengthConstraint: false, 
+            request.CertificateExtensions.Add(new X509BasicConstraintsExtension(certificateAuthority: false, hasPathLengthConstraint: false, 
                 pathLengthConstraint: 0, critical: true));
 
-            request.CertificateExtensions.Add(new X509KeyUsageExtension(
-                X509KeyUsageFlags.DigitalSignature |
-                X509KeyUsageFlags.KeyEncipherment, critical: true));
+            request.CertificateExtensions.Add(new X509KeyUsageExtension(X509KeyUsageFlags.DigitalSignature | X509KeyUsageFlags.KeyEncipherment, critical: true));
 
             var eku = new OidCollection
             {
@@ -185,19 +173,16 @@ namespace LogiG733Tray.Utils
 
         private static void InstallCaCertificate(X509Certificate2 ca)
         {
-            using var publicCertificate =
-                X509CertificateLoader.LoadCertificate(ca.Export(X509ContentType.Cert));
+            using var publicCertificate = X509CertificateLoader.LoadCertificate(ca.Export(X509ContentType.Cert));
 
             using var store = new X509Store(StoreName.Root, StoreLocation.CurrentUser);
 
             store.Open(OpenFlags.ReadWrite);
 
-            Logger.Information(
-                "Checking installed CA certificates for {Subject}. Current thumbprint: {Thumbprint}",
+            Logger.Information("Checking installed CA certificates for {Subject}. Current thumbprint: {Thumbprint}",
                 ca.Subject, ca.Thumbprint);
 
-            var existing = store.Certificates.Find(
-                X509FindType.FindBySubjectDistinguishedName,
+            var existing = store.Certificates.Find(X509FindType.FindBySubjectDistinguishedName,
                 ca.Subject, validOnly: false);
 
             var currentInstalled = false;
@@ -206,15 +191,13 @@ namespace LogiG733Tray.Utils
             {
                 if (string.Equals(certificate.Thumbprint, ca.Thumbprint, StringComparison.OrdinalIgnoreCase))
                 {
-                    Logger.Information("Current CA certificate is already installed. Thumbprint: {Thumbprint}",
-                        certificate.Thumbprint);
+                    Logger.Information("Current CA certificate is already installed. Thumbprint: {Thumbprint}", certificate.Thumbprint);
 
                     currentInstalled = true;
                 }
                 else
                 {
-                    Logger.Information("Removing old CA certificate. Thumbprint: {Thumbprint}",
-                        certificate.Thumbprint);
+                    Logger.Information("Removing old CA certificate. Thumbprint: {Thumbprint}", certificate.Thumbprint);
 
                     store.Remove(certificate);
                 }
@@ -227,13 +210,11 @@ namespace LogiG733Tray.Utils
                 return;
             }
 
-            Logger.Information("Current CA certificate is not installed. Installing it. Thumbprint: {Thumbprint}",
-                ca.Thumbprint);
+            Logger.Information("Current CA certificate is not installed. Installing it. Thumbprint: {Thumbprint}", ca.Thumbprint);
 
             store.Add(publicCertificate);
 
-            Logger.Information("Successfully installed CA certificate. Thumbprint: {Thumbprint}",
-                ca.Thumbprint);
+            Logger.Information("Successfully installed CA certificate. Thumbprint: {Thumbprint}", ca.Thumbprint);
         }
         
         private static bool CertificateMatchesIp(X509Certificate2 certificate, string ipAddress)
@@ -268,8 +249,7 @@ namespace LogiG733Tray.Utils
 
         private static X509Certificate2 LoadCertificate(string path)
         {
-            return X509CertificateLoader.LoadPkcs12FromFile(path, password: null, keyStorageFlags:
-                X509KeyStorageFlags.Exportable | X509KeyStorageFlags.MachineKeySet);
+            return X509CertificateLoader.LoadPkcs12FromFile(path, password: null, keyStorageFlags: X509KeyStorageFlags.Exportable | X509KeyStorageFlags.MachineKeySet);
         }
     }
 }

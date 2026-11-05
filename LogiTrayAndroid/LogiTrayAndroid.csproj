@@ -6,8 +6,8 @@
         <Nullable>enable</Nullable>
         <ImplicitUsings>enable</ImplicitUsings>
         <ApplicationId>com.Myrkur.LogiTrayAndroidCompanion</ApplicationId>
-        <ApplicationVersion>127</ApplicationVersion>
-        <ApplicationDisplayVersion>1.2.7</ApplicationDisplayVersion>
+        <ApplicationVersion>128</ApplicationVersion>
+        <ApplicationDisplayVersion>1.2.8</ApplicationDisplayVersion>
         <!--
           Enables trim analyzers and full trimming during Release mode.
           To learn more, see: https://learn.microsoft.com/dotnet/core/deploying/trimming/trimming-options#trimming-granularity
@@ -17,5 +17,6 @@
     </PropertyGroup>
     <ItemGroup>
       <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="10.0.14" />
+      <PackageReference Include="Microsoft.NET.ILLink.Tasks" Version="10.0.14" />
     </ItemGroup>
 </Project>

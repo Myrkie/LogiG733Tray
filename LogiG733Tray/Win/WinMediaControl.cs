@@ -95,10 +95,7 @@ namespace LogiG733Tray.Win
                 if (_selectedSession != null)
                     DetachSessionHandlers(_selectedSession);
 
-                int currentIndex = sessions
-                    .Select((session, index) => new { session, index })
-                    .FirstOrDefault(x => ReferenceEquals(x.session, current))
-                    ?.index ?? -1;
+                int currentIndex = sessions.Select((session, index) => new { session, index }).FirstOrDefault(x => ReferenceEquals(x.session, current))?.index ?? -1;
 
                 int nextIndex = (currentIndex + 1) % sessions.Count;
 
@@ -132,10 +129,7 @@ namespace LogiG733Tray.Win
                 if (_selectedSession != null)
                     DetachSessionHandlers(_selectedSession);
 
-                int currentIndex = sessions
-                    .Select((session, index) => new { session, index })
-                    .FirstOrDefault(x => ReferenceEquals(x.session, current))
-                    ?.index ?? -1;
+                int currentIndex = sessions.Select((session, index) => new { session, index }).FirstOrDefault(x => ReferenceEquals(x.session, current))?.index ?? -1;
 
                 int previousIndex = (currentIndex - 1 + sessions.Count) % sessions.Count;
 
@@ -153,7 +147,7 @@ namespace LogiG733Tray.Win
             }
         }
 
-        private async Task<string?> GetSessionNameAsync(GlobalSystemMediaTransportControlsSession? session)
+        private static async Task<string?> GetSessionNameAsync(GlobalSystemMediaTransportControlsSession? session)
         {
             if (session == null)
                 return null;

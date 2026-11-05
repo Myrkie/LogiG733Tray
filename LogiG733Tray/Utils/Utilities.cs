@@ -138,18 +138,14 @@ namespace LogiG733Tray.Utils
             string js  = ReadEmbeddedResource($"Pages.{pageName}.js") ?? "";
             string utilJs = ReadEmbeddedResource("Pages.Util.js") ?? "";
 
-            return html
-                .Replace("{{CSS}}", css)
-                .Replace("{{JS}}", utilJs + "\n" + js);
+            return html.Replace("{{CSS}}", css).Replace("{{JS}}", utilJs + "\n" + js);
         }
 
         private static string ReadEmbeddedResource(string logicalName)
         {
             var asm = Assembly.GetExecutingAssembly();
 
-            using var stream = asm.GetManifestResourceStream(logicalName)
-                               ?? throw new InvalidOperationException(
-                                   $"Embedded resource '{logicalName}' not found.");
+            using var stream = asm.GetManifestResourceStream(logicalName) ?? throw new InvalidOperationException($"Embedded resource '{logicalName}' not found.");
 
             using var reader = new StreamReader(stream);
             return reader.ReadToEnd();
