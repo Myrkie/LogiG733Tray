@@ -186,24 +186,6 @@ namespace LogiTrayAndroid
             _connectionConfigured = true;
         }
 
-        protected override void OnPause()
-        {
-            base.OnPause();
-            _ = HandlePauseAsync();
-        }
-
-        private async Task HandlePauseAsync()
-        {
-            try
-            {
-                await _httpService.StopAsync();
-            }
-            catch (Exception ex)
-            {
-                Android.Util.Log.Error(nameof(OnPause), ex.ToString());
-            }
-        }
-
         protected override void OnResume()
         {
             base.OnResume();
@@ -217,6 +199,10 @@ namespace LogiTrayAndroid
             try
             {
                 await StartSignalRConnectionAsync();
+            }
+            catch (OperationCanceledException)
+            {
+                // expected cancellation.
             }
             catch (Exception ex)
             {
@@ -261,6 +247,9 @@ namespace LogiTrayAndroid
 
                 RunOnUiThread(() =>
                 {
+                    if (_isDestroyed)
+                        return;
+
                     _tvConnectionState.Text = "Connecting...";
                     SetSignalRButtonsEnabled(false);
                 });
@@ -271,10 +260,17 @@ namespace LogiTrayAndroid
                 {
                     RunOnUiThread(() =>
                     {
+                        if (_isDestroyed)
+                            return;
+
                         _tvConnectionState.Text = "Connected";
                         SetSignalRButtonsEnabled(true);
                     });
                 }
+            }
+            catch (OperationCanceledException)
+            {
+                Logger.Error("SignalR connection attempt was canceled.");
             }
             catch (Exception ex)
             {
@@ -284,6 +280,9 @@ namespace LogiTrayAndroid
                 {
                     RunOnUiThread(() =>
                     {
+                        if (_isDestroyed)
+                            return;
+
                         _tvConnectionState.Text = "Disconnected";
                         SetSignalRButtonsEnabled(false);
 
