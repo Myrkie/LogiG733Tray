@@ -14,7 +14,7 @@ namespace LogiG733Tray.Utils
         private const string OuName = $"{Constants.AppName} Desktop Application";
         private const string ScName = $"{Constants.AppName} API Server Certificate";
 
-        private static string CertificateDirectory => Path.Combine(AppContext.BaseDirectory, "Config", "Cert");
+        private static string CertificateDirectory => Path.Combine(AppContext.BaseDirectory, Config.ConfigRoot, "Cert");
 
         private static string CaPath => Path.Combine(CertificateDirectory, "ca.pfx");
         private static string CaPemPath => Path.Combine(CertificateDirectory, "ca.pem");

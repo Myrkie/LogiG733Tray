@@ -12,6 +12,7 @@ namespace LogiG733Tray
     {
         // ReSharper disable once UnusedMember.Local
         private static readonly ILogger Logger = Log.ForContext(typeof(Program));
+        private static readonly string LogPath = Path.Combine(AppContext.BaseDirectory, Config.ConfigRoot, "Logs", $"log-{DateTime.Now:M-d-yyyy-HH-mm}.txt");
 
         private static NotifyIcon _notifyIcon = new();
         private static LightControlForm? _lightControlForm;
@@ -39,10 +40,9 @@ namespace LogiG733Tray
                     "[{Timestamp:HH:mm:ss} {Level:u3}] [{SourceContext}] {Message:lj}{NewLine}{Exception}",
                     theme: AnsiConsoleTheme.Code)
                 .WriteTo.File(
-                    path: "logs/log-.txt",
+                    path: LogPath,
                     outputTemplate:
-                    "[{Timestamp:MM-dd-yyyy HH:mm:ss} {Level:u3}] [{SourceContext}] {Message:lj}{NewLine}{Exception}",
-                    rollingInterval: RollingInterval.Day,
+                    "[{Timestamp:HH:mm:ss} {Level:u3}] [{SourceContext}] {Message:lj}{NewLine}{Exception}",
                     retainedFileCountLimit: 4,
                     shared: true)
                 .CreateLogger();

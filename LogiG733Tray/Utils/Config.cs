@@ -37,7 +37,9 @@ namespace LogiG733Tray.Utils
     [Serializable]
     public class Config
     {
-        private static readonly string ConfigPath = Path.Combine(AppContext.BaseDirectory, "Config" ,"config.json");
+        [JsonIgnore]
+        public static readonly string ConfigRoot = "LogiG733Tray.conf";
+        private static readonly string ConfigPath = Path.Combine(AppContext.BaseDirectory, ConfigRoot, "config.json");
         public static Config Instance { get; } = LoadConfig();
         public bool DebugMode { get; set; }
         public bool UseBatteryVoltageTable { get; set; }
